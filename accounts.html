@@ -97,6 +97,59 @@ $('v').addEventListener('click',function(e){var b=e.target.closest('button');if(
 document.querySelector('.row').addEventListener('click',function(e){var b=e.target.closest('button');if(b&&b.dataset.s){scr=b.dataset.s;signed=null;msg='';view()}});
 view();
 </script>
-<script>if(location.pathname!=="accounts.html"&&!session.requireAuth()){};</script></body>
+<script>if(location.pathname!=="accounts.html"&&!session.requireAuth()){};</script><script>
+// Wire real auth on top of the design's UI
+document.addEventListener('click', async function(e){
+  var b = e.target.closest('button'); if(!b) return;
+  if (b.id === 'lgo') {
+    e.preventDefault(); e.stopPropagation();
+    var u = (document.getElementById('lu')||{}).value||'';
+    var p = (document.getElementById('lp')||{}).value||'';
+    u = u.trim().toLowerCase();
+    if (!u||!p) { var le=document.getElementById('le'); if(le){le.textContent='Enter your username and password.';le.style.display='block'} return; }
+    try {
+      var d = await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:u,password:p})});
+      localStorage.setItem('token',d.token); localStorage.setItem('user',JSON.stringify(d.user));
+      var next = new URLSearchParams(location.search).get('next');
+      location.href = next ? decodeURIComponent(next) : 'home.html';
+    } catch(err){ var le2=document.getElementById('le'); if(le2){le2.textContent=err.message;le2.style.display='block'} }
+  }
+  if (b.id === 'sgo') {
+    e.preventDefault(); e.stopPropagation();
+    var n=(document.getElementById('sn')||{}).value||'';
+    var u2=(document.getElementById('su')||{}).value||'';
+    var p1=(document.getElementById('sp')||{}).value||'';
+    var p2=(document.getElementById('sc')||{}).value||'';
+    n=n.trim(); u2=u2.trim().toLowerCase();
+    if(!n){var se=document.getElementById('se');if(se){se.textContent='Enter your full name.';se.style.display='block'}return;}
+    if(u2.length<3){var se2=document.getElementById('se');if(se2){se2.textContent='Username needs at least 3 letters.';se2.style.display='block'}return;}
+    if(p1.length<8){var se3=document.getElementById('se');if(se3){se3.textContent='Password needs at least 8 characters.';se3.style.display='block'}return;}
+    if(p1!==p2){var se4=document.getElementById('se');if(se4){se4.textContent='The two passwords do not match.';se4.style.display='block'}return;}
+    try { await api('/api/auth/signup',{method:'POST',body:JSON.stringify({name:n,username:u2,password:p1})}); location.href='accounts.html'; } catch(err){ var se5=document.getElementById('se'); if(se5){se5.textContent=err.message;se5.style.display='block'} }
+  }
+  if (b.id === 'cgo') {
+    e.preventDefault(); e.stopPropagation();
+    var f = scr==='change';
+    var n1=(document.getElementById('cp1')||{}).value||'';
+    var n2=(document.getElementById('cp2')||{}).value||'';
+    if(n1.length<8){var cpe=document.getElementById('cpe');if(cpe){cpe.textContent='Password needs at least 8 characters.';cpe.style.display='block'}return;}
+    if(n1!==n2){var cpe2=document.getElementById('cpe');if(cpe2){cpe2.textContent='The two passwords do not match.';cpe2.style.display='block'}return;}
+    if(f){
+      // forced change: no old password needed (use a sentinel? backend requires oldPassword)
+      // For forced change, we'll ask current password too; fallback to old password field
+    }
+    var oldP = f ? null : ((document.getElementById('cp0')||{}).value||'');
+    // if forced, prompt for current
+    if (f) { oldP = prompt('Enter your current (temporary) password:'); if(!oldP) return; }
+    try {
+      await api('/api/auth/change-password',{method:'POST',body:JSON.stringify({oldPassword:oldP,newPassword:n1})});
+      alert('Password changed. Please log in again.');
+      localStorage.removeItem('token'); localStorage.removeItem('user');
+      location.href='accounts.html';
+    } catch(err){ var cpe3=document.getElementById('cpe'); if(cpe3){cpe3.textContent=err.message;cpe3.style.display='block'} }
+  }
+}, true);
+</script>
+</body>
 </html>
 
