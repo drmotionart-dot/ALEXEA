@@ -97,6 +97,6 @@ $('v').addEventListener('click',function(e){var b=e.target.closest('button');if(
 document.querySelector('.row').addEventListener('click',function(e){var b=e.target.closest('button');if(b&&b.dataset.s){scr=b.dataset.s;signed=null;msg='';view()}});
 view();
 </script>
-</body>
+<script>if(location.pathname!=="accounts.html"&&!session.requireAuth()){};</script></body>
 </html>
 
