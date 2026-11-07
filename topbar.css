@@ -1,0 +1,12 @@
+/* Branded top bar for every page except Home. Render ONCE in the app shell, not per page.
+   Standalone so hands-on.html and tools.html can use it without loading shared.css. */
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:8px 14px;border:0;border-radius:14px;background:linear-gradient(90deg,#003C7E,#0A6CBF);color:#fff}
+.top .hl{display:flex;align-items:center;gap:12px;text-decoration:none}
+.top .logo{width:46px;height:46px;border-radius:10px;background:#fff;overflow:hidden;flex:none;border:.5px solid rgba(255,255,255,.5)}
+.top .logo img{width:100%;height:100%;object-fit:cover;object-position:50% 48%;transform:scale(1.8);transform-origin:43.2% 30.6%;display:block}
+.top .brand{font-weight:500;font-size:16px;color:#fff}
+.top .nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.top .nav a{font-size:13px;color:rgba(255,255,255,.85);text-decoration:none;padding:5px 10px;border-radius:8px}
+.top .nav a:hover{background:rgba(255,255,255,.14)}
+.top .nav a.cur{background:rgba(255,255,255,.22);color:#fff}
+@media(max-width:700px){.top .nav{flex-basis:100%;overflow-x:auto;flex-wrap:nowrap;margin-left:0}}

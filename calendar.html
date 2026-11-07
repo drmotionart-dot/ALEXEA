@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendar and day timetable · design source of truth</title>
+<link rel="stylesheet" href="shared.css">
+<!--
+  DESIGN SOURCE OF TRUTH: course calendar, day timetable, team and tool assignment.
+  Match exactly. Do not restyle. Weeks start on Sunday, like the printed ALEXEA 2026 calendar
+  (design/assets/alexea-2026-calendar.jpg). Course data below is REAL 2026 data read from that
+  calendar (also in docs/COURSES_2026.json). Timetable rows and hands-on types per day are
+  SAMPLE: in the real app heads enter them per course day. The "View as" row is preview-only.
+-->
+<style>
+.mh{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.mh .m{font-size:16px;font-weight:500;flex:1}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cw{font-size:11px;color:var(--text-2);text-align:center;padding:2px 0}
+.cl{min-height:64px;border-radius:8px;padding:4px 5px;font-size:12px;border:.5px solid var(--border);background:var(--surface-1);text-align:left;display:block;width:100%;color:inherit}
+button.cl{cursor:pointer}
+.cl .n{font-size:11px;opacity:.75;display:block}
+.cl .cn{font-size:10.5px;line-height:1.25;margin-top:2px;display:block;overflow:hidden}
+.cl.today .n{font-weight:700;opacity:1}
+.cl.sl{outline:1.5px solid var(--text)}
+.cl.ev{border-color:transparent}
+.dt{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:3px}
+.k-d12{background:#1D9E75}.k-dw{background:#D85A30}.k-da,.k-sh{background:#7F77DD}
+.lgd{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--text-2);margin:8px 0}
+.lgd span{display:inline-flex;align-items:center;gap:4px}
+.nx{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.nx b{font-weight:500}
+.tl{display:flex;gap:10px;margin:0 0 4px}
+.tt{width:84px;font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--text-2);padding-top:6px;flex:none}
+.tb{flex:1;border-radius:8px;padding:6px 10px;font-size:13px;display:flex;flex-direction:column;justify-content:center}
+.b-lec{background:var(--surface-2);border-left:3px solid var(--border-stronger);border-radius:0 8px 8px 0}
+.b-brk{border:.5px dashed var(--border);color:var(--text-2);font-size:12px}
+.b-live{background:var(--bg-accent);color:var(--text-accent);border-left:3px solid var(--text-accent);border-radius:0 8px 8px 0}
+.b-d12{background:var(--bg-aqua);color:var(--text-aqua);border-left:3px solid #1D9E75;border-radius:0 8px 8px 0}
+.b-dw{background:var(--bg-orange);color:var(--text-orange);border-left:3px solid #D85A30;border-radius:0 8px 8px 0}
+.b-da,.b-sh{background:var(--bg-violet);color:var(--text-violet);border-left:3px solid #7F77DD;border-radius:0 8px 8px 0}
+.p-d12{background:var(--bg-aqua);color:var(--text-aqua)}.p-dw{background:var(--bg-orange);color:var(--text-orange)}
+.p-da,.p-sh{background:var(--bg-violet);color:var(--text-violet)}.p-none{background:var(--surface-2);color:var(--text-2)}
+.sm{font-size:12px;opacity:.85}
+.as{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px}
+.ar{display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--surface-2);border-radius:8px;padding:4px 8px;font-size:13px}
+.ar.off{opacity:.55}
+.ar select{width:auto;min-width:104px;padding:4px 8px}
+.yr{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.ym{background:var(--surface-1);border:.5px solid var(--border);border-radius:12px;padding:8px 10px 10px}
+.ymh{background:#1B8FA0;color:#fff;text-align:right;padding:4px 10px;border-radius:6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 6px}
+.yg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.yw{font-size:10px;color:var(--text-2)}
+.yd{font-size:12px;padding:3px 0;border:0;border-radius:6px;background:transparent;color:var(--text);display:block;width:100%;line-height:1.3}
+button.yd{cursor:pointer;font-weight:500}
+.yd.today{outline:1.5px solid var(--text)}
+.yd.sl{outline:2px solid var(--text)}
+.yl{margin-top:8px;border-top:.5px solid var(--border);padding-top:6px;display:flex;flex-direction:column;gap:3px}
+.yi{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-2)}
+.yi i{width:10px;height:10px;border-radius:3px;flex:none;background:currentColor}
+.yi span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(min-width:1100px){.yr{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.pd{margin:0 0 12px}
+.pd textarea{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <a class="hl" href="home.html" aria-label="Home"><div class="logo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><span class="brand">ALEXEA Course Manager</span></a>
+  <nav class="nav"><a href="home.html">Home</a><a class="cur" href="calendar.html">Calendar</a><a href="hands-on.html">Hands-on</a><a href="attendance.html">Attendance</a><a href="tools.html">Tools</a><a href="import.html">Candidates</a><a href="activity.html">Activity</a><a href="accounts.html">Account</a></nav>
+</header>
+<div class="hero"><h1>Course calendar 2026</h1><p style="margin-bottom:10px">Tap a course day to see its timetable, team and tools.</p><div id="nx"></div></div>
+<div class="row"><span class="lb">View</span><button id="vy">Year</button><button id="vm">Month</button><span class="lb" style="margin-left:14px;min-width:0">View as</span><button id="rh">Head</button><button id="ri">Member</button></div>
+<div id="yr" class="yr"></div>
+<div id="mwrap" style="display:none"><div class="mh"><button id="pv" aria-label="Previous month">‹</button><span class="m" id="mt"></span><button id="td">Today</button><button id="nxb" aria-label="Next month">›</button></div>
+<div class="cal" id="cal"></div></div>
+<div class="lgd" id="lg"></div>
+<div class="lgd"><span><span class="dt k-d12"></span>12 dry</span><span><span class="dt k-dw"></span>Dry and wet</span><span><span class="dt k-da"></span>Dry and animal / shift day</span></div>
+<div id="day" class="box" style="display:none"></div>
+<div id="prog" class="box" style="display:none"></div>
+<div class="box">
+  <div class="row" style="margin:0"><button id="up">Update from a calendar image</button><input type="file" id="fi" accept="image/*" style="display:none"><span class="nt" id="un">For next year: upload the new calendar image, then confirm each detected course and date.</span></div>
+</div>
+</div>
+<script>
+var TODAY='2026-11-06',head=true,cur=null,mo=10;
+var DEP={gen:'General surgery',gyn:'Gynecology',endo:'Endoscopic surgery',brs:'Breast surgery',ped:'Pediatric surgery',uro:'Urological surgery'};
+/* REAL 2026 DATA from the printed calendar: [department, name, start, end, closed(private)] */
+var CS=[
+['gen','Bariatric Laparoscopic Surgery','2026-05-03','2026-05-06'],['gen','Bariatric Laparoscopic Surgery','2026-12-13','2026-12-16'],
+['gen','Basic Laparoscopic Surgery','2026-01-11','2026-01-14'],['gen','Basic Laparoscopic Surgery','2026-04-19','2026-04-22'],['gen','Basic Laparoscopic Surgery','2026-07-05','2026-07-08'],['gen','Basic Laparoscopic Surgery','2026-11-08','2026-11-11'],
+['gen','Biliary','2026-10-11','2026-10-14'],
+['gen','Colorectal Laparoscopic Surgery','2026-04-05','2026-04-08'],['gen','Colorectal Laparoscopic Surgery','2026-08-09','2026-08-12'],['gen','Colorectal Laparoscopic Surgery','2026-10-25','2026-10-28'],
+['gen','Groin and Ventral Hernia Repair','2026-01-26','2026-01-29'],['gen','Groin and Ventral Hernia Repair','2026-07-26','2026-07-29'],
+['gen','Introduction to the world of Laparoscopy','2026-02-15','2026-02-16'],
+['gen','Laparoscopic Upper GI','2026-06-07','2026-06-10'],['gen','Liver and Pancreas','2026-05-17','2026-05-20'],
+['gen','Spleen, Renal, Suprarenal and Kidney','2026-09-13','2026-09-16'],['gen','Upper GI Oncology','2026-11-22','2026-11-25'],
+['gyn','General Gynecology (Laparoscopy, Hysteroscopy and V-Notes)','2026-02-07','2026-02-11'],['gyn','General Gynecology (Laparoscopy, Hysteroscopy and V-Notes)','2026-12-06','2026-12-10'],
+['gyn','Hysteroscopy','2026-04-15','2026-04-16'],['gyn','Hysteroscopy','2026-07-15','2026-07-16'],['gyn','Hysteroscopy','2026-10-21','2026-10-22'],
+['gyn','IVF','2026-05-12','2026-05-14'],['gyn','IVF','2026-10-03','2026-10-05',1],['gyn','IVF','2026-11-03','2026-11-05'],
+['gyn','Laparoscopic Surgery in Gynecology (Hysterectomy)','2026-06-21','2026-06-25'],['gyn','Role of Laparoscopy in Infertility','2026-09-20','2026-09-24'],
+['endo','Endoscopic Submucosal Dissection (2 days)','2026-01-07','2026-01-08',1],['endo','Endoscopic Submucosal Dissection (2 days)','2026-03-25','2026-03-26',1],['endo','Endoscopic Submucosal Dissection (2 days)','2026-04-29','2026-04-30',1],['endo','Endoscopic Submucosal Dissection (2 days)','2026-10-07','2026-10-08',1],
+['endo','Endoscopic Submucosal Dissection (5 days)','2026-01-31','2026-02-04',1],['endo','Endoscopic Submucosal Dissection (5 days)','2026-08-02','2026-08-06',1],
+['brs','Breast Reconstruction','2026-06-14','2026-06-17'],['brs','Oncoplastic Breast Surgery Masterclass (MBG)','2026-07-21','2026-07-23'],['brs','Oncoplastic Breast Surgery Masterclass (MBG)','2026-12-22','2026-12-24'],['brs','Oncoplastic Breast Surgery (Step by Step)','2026-11-15','2026-11-18'],
+['ped','Basic Pediatric Laparoscopy','2026-01-21','2026-01-23'],
+['uro','Laparoscopic Urology','2026-06-28','2026-07-01']
+];
+var TY={d12:['12 dry stations','p-d12'],dw:['6 dry + 6 wet','p-dw'],da:['6 dry + 6 animal','p-da'],sh:['Shift day: 6 dry + 6 animal, groups swap halfway','p-sh'],none:['No hands-on','p-none']};
+var TEAM=[['Dr. Ahmed','head','p'],['Dr. Hany','head','p'],['Dr. Sara','','p'],['Dr. Omar','','l'],['Dr. Nour','','p'],['Dr. Mona','','a'],['Dr. Youssef','','p'],['Dr. Karim','','p']];
+var D={},AS={},TL={};
+function dates(a,b){var r=[],d=new Date(a+'T00:00:00Z'),e=new Date(b+'T00:00:00Z');while(d<=e){r.push(d.toISOString().slice(0,10));d=new Date(d.getTime()+864e5)}return r}
+CS.forEach(function(c,ci){var ds=dates(c[2],c[3]);ds.forEach(function(k,i){D[k]={c:ci,i:i+1,n:ds.length}})});
+function $(i){return document.getElementById(i)}
+function fd(k){var d=new Date(k+'T00:00:00Z');return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getUTCDay()]+' '+d.getUTCDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()]+' '+d.getUTCFullYear()}
+function ht(i,n){if(n==1)return 'none';if(i==1)return 'd12';if(i==n&&n>2)return 'none';if(i==2)return 'dw';if(i==3)return 'sh';return 'da'}
+function rows(i,n){var t=ht(i,n),r;
+  if(i==n&&n>2)return [['08:00','14:00','Live surgery, case dependent','live'],['14:00','14:30','Final session and feedback','lec']];
+  if(i==1)r=[['09:00','10:30','Introduction, safety and equipment','lec'],['10:30','11:00','Coffee break','brk'],['11:00','12:30','Technique lecture','lec'],['12:30','13:30','Lunch','brk'],['13:30','16:30','Hands-on training','h']];
+  else r=[['09:00','10:00','Lecture','lec'],['10:00','11:00','Video session','lec'],['11:00','11:30','Coffee break','brk'],['11:30','14:30','Hands-on training','h'],['14:30','15:00','Lunch','brk']];
+  if(t=='sh'){var x=r.pop&&r.splice(3,1)[0];r.splice(3,0,['11:30','13:00','Hands-on · first half','h1'],['13:00','14:30','Hands-on · second half, groups swap','h2'])}
+  return r}
+function mins(a,b){var x=a.split(':'),y=b.split(':');return (+y[0]*60+ +y[1])-(+x[0]*60+ +x[1])}
+function next(){var best=null;CS.forEach(function(c,i){if(c[3]>=TODAY&&(!best||c[2]<CS[best][2]))best=i});
+  var c=CS[best],df=Math.round((new Date(c[2]+'T00:00:00Z')-new Date(TODAY+'T00:00:00Z'))/864e5);
+  $('nx').innerHTML='<p class="nxl">Next course'+(df>0?' · in '+df+' day'+(df>1?'s':''):' · running now')+'</p><p class="nxn" dir="auto">'+c[1]+'</p><p><span class="pl dep-'+c[0]+'">'+DEP[c[0]]+'</span> '+fd(c[2])+' to '+fd(c[3])+(c[4]?' · private':'')+'</p><button id="gn">Show on calendar</button>';
+  $('gn').onclick=function(){mo=+c[2].slice(5,7)-1;cur=c[2];rv();dayp()}}
+function cal(){
+  var names=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  $('mt').textContent=names[mo]+' 2026';$('pv').disabled=mo==0;$('nxb').disabled=mo==11;
+  var g='';['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(function(d){g+='<div class="cw">'+d+'</div>'});
+  var f=new Date(Date.UTC(2026,mo,1)).getUTCDay(),n=new Date(Date.UTC(2026,mo+1,0)).getUTCDate();
+  for(var i=0;i<f;i++)g+='<div></div>';
+  for(var d=1;d<=n;d++){var k='2026-'+(mo<9?'0':'')+(mo+1)+'-'+(d<10?'0':'')+d,e=D[k],t=k==TODAY?' today':'';
+    g+=e?'<button class="cl ev dep-'+CS[e.c][0]+t+(cur==k?' sl':'')+'" data-k="'+k+'"><span class="n">'+d+'</span><span class="cn" dir="auto">'+CS[e.c][1]+' · day '+e.i+'</span>'+(HT(k)!='none'?'<span class="dt k-'+HT(k)+'"></span>':'')+'</button>':'<div class="cl'+t+'"><span class="n">'+d+'</span></div>'}
+  $('cal').innerHTML=g;
+  $('rh').className=head?'on':'';$('ri').className=head?'':'on'}
+function dayp(){
+  var el=$('day');if(!cur||!D[cur]){el.style.display='none';prog();return}
+  var e=D[cur],c=CS[e.c],t=HT(cur),ty=TY[t];
+  var h='<p style="font-size:15px;font-weight:500;margin:0" dir="auto">'+c[1]+' · day '+e.i+' of '+e.n+'</p><p class="nt" style="margin:2px 0 10px">'+fd(cur)+' · <span class="pl dep-'+c[0]+'">'+DEP[c[0]]+'</span> <span class="pl '+ty[1]+'">'+ty[0]+'</span>'+(c[4]?' <span class="pl s-mut">Private course</span>':'')+'</p><div class="prog"><i style="width:'+Math.round(e.i/e.n*100)+'%"></i></div><div class="dots">'+dates(c[2],c[3]).map(function(k,j){return '<button class="dd'+(j+1==e.i?' on':'')+'" data-k="'+k+'">Day '+(j+1)+'</button>'}).join('')+'</div>';
+  RW(cur).forEach(function(r){var m=mins(r[0],r[1]),ht2=Math.max(34,Math.round(m*0.5)),k=r[3],cls='b-lec',sub='';
+    if(k=='brk')cls='b-brk';else if(k=='live')cls='b-live';else if(k.charAt(0)=='h'){cls='b-'+t;sub=t=='sh'?(k=='h1'?'Group 1 on animal, group 2 on dry':'Group 1 on dry, group 2 on animal'):''}
+    h+='<div class="tl"><span class="tt">'+r[0]+' – '+r[1]+'</span><div class="tb '+cls+'" style="min-height:'+ht2+'px"><span>'+r[2]+'</span>'+(sub?'<span class="sm">'+sub+'</span>':'')+'</div></div>'});
+  if(t!='none'){
+    var a=AS[cur]=AS[cur]||(function(){var o={},i=0;TEAM.forEach(function(m){if(m[2]=='a')o[m[0]]='';else{o[m[0]]=(i%2?'L':'U');i++}});return o})();
+    var present=TEAM.filter(function(m){return m[2]!='a'}),pc=present.length,hd=present.filter(function(m){return m[1]=='head'}).length;
+    var uc=0,lc=0;present.forEach(function(m){if(a[m[0]]=='U')uc++;if(a[m[0]]=='L')lc++});
+    var tl=TL[cur]=TL[cur]||present[0][0];
+    h+='<h3 class="sh">Team for the hands-on</h3><p class="nt" style="margin:0 0 6px">'+pc+' present → suggested '+Math.ceil(pc/2)+' Upper, '+Math.floor(pc/2)+' Lower. Absent members cannot be assigned.</p><div class="as">';
+    TEAM.forEach(function(m){var abs=m[2]=='a',v=a[m[0]]||'',lab={U:'Upper · stations 1–6',L:'Lower · stations 7–12','':'Off'};
+      h+='<div class="ar'+(abs?' off':'')+'"><span>'+m[0]+(m[1]?' <span class="pl s-acc">head</span>':'')+(m[2]=='l'?' <span class="pl s-warn">late</span>':'')+'</span>'+(abs?'<span class="nt">Absent</span>':head?'<select data-n="'+m[0]+'"><option value="U"'+(v=='U'?' selected':'')+'>Upper · 1–6</option><option value="L"'+(v=='L'?' selected':'')+'>Lower · 7–12</option><option value=""'+(v==''?' selected':'')+'>Off</option></select>':'<span class="nt">'+lab[v]+'</span>')+'</div>'});
+    h+='</div>';
+    if(hd==0)h+='<p class="er">No head is present. At least one head should be on site.</p>';
+    if(uc==0||lc==0)h+='<p class="er">'+(uc==0?'Upper':'Lower')+' has nobody assigned.</p>';
+    h+='<h3 class="sh">Tool assignment</h3><div class="as"><div class="ar"><span>Harmonic handpiece</span>'+(head?'<select data-tl="1">'+present.map(function(m){return '<option'+(m[0]==tl?' selected':'')+'>'+m[0]+'</option>'}).join('')+'</select>':'<span class="nt">'+tl+'</span>')+'</div></div>';
+    if(!head)h+='<p class="nt" style="margin-top:8px">Only heads can change assignments.</p>';
+    h+='<div class="row" style="margin-top:12px"><a class="btn" href="hands-on.html">Open hands-on page</a><a class="btn" href="attendance.html">Team attendance</a></div>'}
+  el.innerHTML=h;el.style.display='block';prog()}
+$('cal').addEventListener('click',function(e){var b=e.target.closest('.ev');if(b){cur=b.dataset.k;cal();dayp();$('day').scrollIntoView({block:'nearest',behavior:'smooth'})}});
+$('day').addEventListener('change',function(e){var s=e.target;if(s.dataset.n)AS[cur][s.dataset.n]=s.value;if(s.dataset.tl)TL[cur]=s.value;dayp()});
+$('day').addEventListener('click',function(e){var b=e.target.closest('.dd');if(b){cur=b.dataset.k;mo=+cur.slice(5,7)-1;rv();dayp()}});
+var view='year';
+function rng(c){var a=c[2].split('-'),b=c[3].split('-'),M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return (+a[2])+(a[1]==b[1]?'':' '+M[+a[1]-1])+'–'+(+b[2])+' '+M[+b[1]-1]}
+function yearView(){
+  var N=['January','February','March','April','May','June','July','August','September','October','November','December'],h='';
+  for(var m=0;m<12;m++){
+    var f=new Date(Date.UTC(2026,m,1)).getUTCDay(),n=new Date(Date.UTC(2026,m+1,0)).getUTCDate(),g='';
+    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(function(w){g+='<span class="yw">'+w+'</span>'});
+    for(var i=0;i<f;i++)g+='<span></span>';
+    for(var d=1;d<=n;d++){var k='2026-'+(m<9?'0':'')+(m+1)+'-'+(d<10?'0':'')+d,e=D[k],t=k==TODAY?' today':'';
+      g+=e?'<button class="yd dep-'+CS[e.c][0]+t+(cur==k?' sl':'')+'" data-k="'+k+'" title="'+CS[e.c][1]+'">'+d+'</button>':'<span class="yd'+t+'">'+d+'</span>'}
+    var lg='';CS.forEach(function(c){if(+c[2].slice(5,7)-1==m||+c[3].slice(5,7)-1==m)lg+='<div class="yi dep-'+c[0]+'" style="background:none"><i></i><span dir="auto">'+c[1]+' · '+rng(c)+(c[4]?' · private':'')+'</span></div>'});
+    h+='<div class="ym"><div class="ymh">'+N[m]+'</div><div class="yg">'+g+'</div><div class="yl">'+(lg||'<span class="yi">No courses</span>')+'</div></div>'}
+  $('yr').innerHTML=h}
+function rv(){$('yr').style.display=view=='year'?'grid':'none';$('mwrap').style.display=view=='year'?'none':'block';
+  $('vy').className=view=='year'?'on':'';$('vm').className=view=='year'?'':'on';
+  if(view=='year')yearView();else cal();
+  $('rh').className=head?'on':'';$('ri').className=head?'':'on'}
+$('yr').addEventListener('click',function(e){var b=e.target.closest('.yd');if(b&&b.dataset.k){cur=b.dataset.k;mo=+cur.slice(5,7)-1;rv();dayp();$('day').scrollIntoView({block:'nearest',behavior:'smooth'})}});
+$('vy').onclick=function(){view='year';rv()};$('vm').onclick=function(){view='month';rv()};
+$('pv').onclick=function(){mo--;cal()};$('nxb').onclick=function(){mo++;cal()};
+$('td').onclick=function(){mo=10;cal()};
+$('rh').onclick=function(){head=true;rv();dayp()};$('ri').onclick=function(){head=false;rv();dayp()};
+$('up').onclick=function(){$('fi').click()};
+$('fi').onchange=function(e){var f=e.target.files[0];if(f)$('un').textContent=f.name+' selected. In the real app the image is read and every detected course and date is shown for you to confirm before saving.'};
+$('lg').innerHTML=Object.keys(DEP).map(function(k){return '<span><span class="pl dep-'+k+'">'+DEP[k]+'</span></span>'}).join('');
+/* ===== Course programme: upload an image or PDF, Analyze, check each day, Save (heads only) ===== */
+var OVD={},pfile='',pkOn=false;
+var PT={d12:'12 dry',dw:'6 dry + 6 wet',da:'6 dry + 6 animal',sh:'Shift day',none:'No hands-on'};
+function eh(x){return x.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function HT(k){return OVD[k]?OVD[k].t:ht(D[k].i,D[k].n)}
+function RW(k){return OVD[k]?OVD[k].r:rows(D[k].i,D[k].n)}
+function hm(x){return ('0'+Math.floor(x/60)).slice(-2)+':'+('0'+x%60).slice(-2)}
+function rtx(r){var o=[];for(var i=0;i<r.length;i++){var x=r[i],k=x[3];if(k=='h2')continue;var end=k=='h1'?r[i+1][1]:x[1];o.push(x[0]+'-'+end+' '+(k=='h1'?'Hands-on training':x[2])+(k=='h'||k=='h1'?' [hands-on]':k=='brk'?' [break]':k=='live'?' [live]':''))}return o.join('\n')}
+function ptx(s,t){var o=[];s.split('\n').forEach(function(l){var m=l.trim().match(/^(\d\d:\d\d)\s*-\s*(\d\d:\d\d)\s+(.*)$/);if(!m)return;var ti=m[3],k='lec';
+  if(/\[hands-on\]/i.test(ti)){k='h';ti=ti.replace(/\s*\[hands-on\]/i,'')}else if(/\[break\]/i.test(ti)){k='brk';ti=ti.replace(/\s*\[break\]/i,'')}else if(/\[live\]/i.test(ti)){k='live';ti=ti.replace(/\s*\[live\]/i,'')}
+  if(k=='h'&&t=='sh'){var a=m[1].split(':'),b=m[2].split(':'),s0=+a[0]*60+ +a[1],e0=+b[0]*60+ +b[1],mid=Math.round((s0+e0)/2);o.push([m[1],hm(mid),ti+' · first half','h1'],[hm(mid),m[2],ti+' · second half, groups swap','h2'])}else o.push([m[1],m[2],ti,k])});return o}
+function prog(){var el=$('prog');if(!cur||!head||!D[cur]){el.style.display='none';return}
+  var c=CS[D[cur].c],ds=dates(c[2],c[3]),h='<h3 class="sh" style="margin-top:0">Course programme</h3><p class="nt" style="margin:0 0 8px">Upload the programme as an image or PDF and press Analyze. Check every day, fix anything wrong, then save.</p><div class="row"><button id="pu">Upload image or PDF</button><input type="file" id="pf" accept="image/*,application/pdf" style="display:none"><span class="nt" id="pn">'+eh(pfile)+'</span><button class="pri" id="pa">Analyze</button></div><p class="er" id="pe" style="display:none"></p>';
+  ds.forEach(function(k,j){h+='<div class="pd"><div class="row" style="margin:0 0 4px"><b style="font-weight:500">Day '+(j+1)+' · '+fd(k)+'</b><select data-pt="'+k+'">'+Object.keys(PT).map(function(t){return '<option value="'+t+'"'+(HT(k)==t?' selected':'')+'>'+PT[t]+'</option>'}).join('')+'</select></div><textarea data-pr="'+k+'" rows="5" dir="auto">'+eh(rtx(RW(k)))+'</textarea></div>'});
+  h+='<p class="nt">One line per row: 09:00-10:30 Title. Add [hands-on], [break] or [live] at the end of a line.</p><div class="row"><button class="pri" id="ps">Save programme</button></div>'+(pkOn?'<p class="ok">Saved. The timetable and the hands-on types are updated.</p>':'');pkOn=false;
+  el.innerHTML=h;el.style.display='block'}
+$('prog').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+  if(b.id=='pu'){$('pf').click();return}
+  if(b.id=='pa'){if(!pfile){var er=$('pe');er.textContent='Choose an image or PDF first.';er.style.display='block';return}
+    $('pn').textContent=pfile+' · preview only: in the real app the file is read for you (PDF text exactly, images with OCR) and the rows below are filled in for you to check.';return}
+  if(b.id=='ps'){document.querySelectorAll('[data-pr]').forEach(function(t){var k=t.dataset.pr,ty=document.querySelector('[data-pt="'+k+'"]').value;OVD[k]={t:ty,r:ptx(t.value,ty)}});pkOn=true;rv();dayp()}});
+$('prog').addEventListener('change',function(e){if(e.target.id=='pf'&&e.target.files[0]){pfile=e.target.files[0].name;$('pn').textContent=pfile;var er=$('pe');if(er)er.style.display='none'}});
+next();rv();
+</script>
+</body>
+</html>

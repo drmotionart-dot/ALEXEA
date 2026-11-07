@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Team activity · design source of truth</title>
+<link rel="stylesheet" href="shared.css">
+<!--
+  DESIGN SOURCE OF TRUTH: Team activity (heads only). One page where heads see what everyone did in the app:
+  check-ins, team assignments and swaps, tool status changes and repair reports, candidate imports,
+  account requests and approvals, programme changes. Newest first, grouped by day, with filters.
+  Members who open this page see a "Only heads can see this page" message (the server enforces it too).
+  The real app writes one record per action (docs/DATA_MODEL.md "activity"); old records expire after 90 days
+  to keep the free database small. All entries below are SAMPLE data. "View as" is preview-only.
+-->
+<style>
+.fl{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
+.dh{font-size:13px;font-weight:500;margin:16px 0 6px;color:var(--text-2)}
+.ev{display:flex;gap:12px;align-items:flex-start;background:var(--surface-1);border:.5px solid var(--border);border-radius:12px;padding:10px 12px;margin:0 0 6px;text-decoration:none;color:inherit}
+a.ev:hover{border-color:var(--border-stronger)}
+.ev .tx{flex:1;min-width:0;font-size:14px}
+.ev .tx b{font-weight:500}
+.ev .tm{font-size:12px;color:var(--text-2);font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap}
+.ic2{width:34px;height:34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;flex:none;font-size:15px}
+.k-checkin{background:var(--bg-ok);color:var(--text-ok)}
+.k-assign{background:var(--bg-accent);color:var(--text-accent)}
+.k-tool{background:var(--bg-orange);color:var(--text-orange)}
+.k-repair{background:var(--bg-bad);color:var(--text-bad)}
+.k-cand{background:var(--bg-violet);color:var(--text-violet)}
+.k-acct{background:var(--bg-warn);color:var(--text-warn)}
+.k-cal{background:var(--bg-aqua);color:var(--text-aqua)}
+.none{text-align:center;padding:24px 12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <a class="hl" href="home.html" aria-label="Home"><div class="logo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><span class="brand">ALEXEA Course Manager</span></a>
+  <nav class="nav"><a href="home.html">Home</a><a href="calendar.html">Calendar</a><a href="hands-on.html">Hands-on</a><a href="attendance.html">Attendance</a><a href="tools.html">Tools</a><a href="import.html">Candidates</a><a class="cur" href="activity.html">Activity</a><a href="accounts.html">Account</a></nav>
+</header>
+<div class="hero"><h1>Team activity</h1><p>Everything the team did in the app, newest first. Only heads can see this page.</p></div>
+<div class="row"><span class="lb">View as</span><button id="rh">Head</button><button id="ri">Member</button></div>
+<div id="body"></div>
+</div>
+<script>
+var head=true,kind='all',who='all',shown=10,TODAY='2026-11-06';
+/* SAMPLE entries: [date, time, person, kind, text, link] */
+var E=[
+['2026-11-06','10:42','Dr. Ahmed','acct','approved the account of <b>Dr. Karim</b>','accounts.html'],
+['2026-11-06','10:15','Dr. Sara','repair','reported <b>ALX-GR-0015</b> as needing repair: “Jaw wobbles”','tools.html'],
+['2026-11-06','09:50','Dr. Omar','tool','set <b>ALX-SC-0007</b> to Maintenance','tools.html'],
+['2026-11-06','09:30','Dr. Hany','cand','imported <b>24 candidates</b> for Basic Laparoscopic Surgery','import.html'],
+['2026-11-06','09:05','Dr. Ahmed','assign','assigned <b>Dr. Nour</b> to the Upper team','attendance.html'],
+['2026-11-05','16:20','Dr. Nour','repair','reported <b>ALX-L3-0002</b> as needing repair: “Fogging after 10 minutes”','tools.html'],
+['2026-11-05','14:10','Dr. Ahmed','assign','swapped candidates <b>Ahmed Hassan</b> and <b>Mohamed Ali</b> on the hands-on plan','hands-on.html'],
+['2026-11-05','12:00','Dr. Sara','tool','started using <b>ALX-GR-0013</b> at Station 3','tools.html'],
+['2026-11-05','08:58','Dr. Youssef','checkin','checked in (present)','attendance.html'],
+['2026-11-05','08:55','Dr. Hany','checkin','checked in (present)','attendance.html'],
+['2026-11-04','17:05','Dr. Ahmed','assign','randomized the Upper and Lower teams','attendance.html'],
+['2026-11-04','15:40','Dr. Mona','acct','created an account, waiting for approval','accounts.html'],
+['2026-11-04','11:22','Dr. Ahmed','tool','registered a new tool <b>ALX-HK-0003</b> (Monopolar L-hook)','tools.html'],
+['2026-11-04','09:12','Dr. Omar','checkin','checked in (late)','attendance.html'],
+['2026-11-03','18:30','Dr. Hany','cal','updated the programme of <b>IVF · 3–5 Nov</b>','calendar.html'],
+['2026-11-03','09:00','Dr. Ahmed','cand','confirmed 3 place matches (Kairo = Cairo)','import.html']
+];
+var KS=[['all','All'],['checkin','Check-ins'],['assign','Assignments'],['tool','Tools'],['cand','Candidates'],['acct','Accounts'],['cal','Calendar']];
+var IC={checkin:'✓',assign:'⇄',tool:'⚙',repair:'!',cand:'☰',acct:'☺',cal:'▦'};
+function $(i){return document.getElementById(i)}
+function fd(k){var d=new Date(k+'T00:00:00Z');if(k==TODAY)return 'Today';if(k=='2026-11-05')return 'Yesterday';return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getUTCDay()]+' '+d.getUTCDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()]}
+function match(e){var k=e[3]=='repair'?'tool':e[3];return (kind=='all'||k==kind)&&(who=='all'||e[2]==who)}
+function render(){
+  $('rh').className=head?'on':'';$('ri').className=head?'':'on';
+  if(!head){$('body').innerHTML='<div class="box none"><h3 class="sh" style="margin-top:0">Only heads can see this page</h3><p class="nt">Ask a head if you need to know what happened.</p><a class="btn" href="home.html" style="margin-top:10px">Back to Home</a></div>';return}
+  var people=[];E.forEach(function(e){if(people.indexOf(e[2])<0)people.push(e[2])});
+  var td=E.filter(function(e){return e[0]==TODAY}).length,rp=E.filter(function(e){return e[3]=='repair'}).length,ck=E.filter(function(e){return e[0]==TODAY&&e[3]=='checkin'}).length;
+  var h='<div class="cnt"><div class="c"><b>'+td+'</b><span>Actions today</span></div><div class="c"><b>'+rp+'</b><span>Repair reports</span></div><div class="c"><b>'+ck+'</b><span>Check-ins today</span></div></div>';
+  h+='<div class="fl">'+KS.map(function(k){return '<button data-k="'+k[0]+'" class="'+(kind==k[0]?'on':'')+'">'+k[1]+'</button>'}).join('')+'<select id="wh" aria-label="Person"><option value="all">Everyone</option>'+people.map(function(p){return '<option'+(who==p?' selected':'')+'>'+p+'</option>'}).join('')+'</select></div>';
+  var L=E.filter(match),vis=L.slice(0,shown),last='';
+  vis.forEach(function(e){if(e[0]!=last){h+='<p class="dh">'+fd(e[0])+'</p>';last=e[0]}
+    h+='<a class="ev" href="'+e[5]+'"><span class="ic2 k-'+e[3]+'">'+IC[e[3]]+'</span><span class="tx"><b>'+e[2]+'</b> '+e[4]+'</span><span class="tm">'+e[1]+'</span></a>'});
+  if(!L.length)h+='<p class="empty">Nothing matches these filters.</p>';
+  if(L.length>shown)h+='<div class="row" style="margin-top:10px"><button id="more">Show more ('+(L.length-shown)+')</button></div>';
+  $('body').innerHTML=h}
+$('body').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;if(b.dataset.k){kind=b.dataset.k;shown=10;render()}if(b.id=='more'){shown+=10;render()}});
+$('body').addEventListener('change',function(e){if(e.target.id=='wh'){who=e.target.value;shown=10;render()}});
+$('rh').onclick=function(){head=true;render()};$('ri').onclick=function(){head=false;render()};
+render();
+</script>
+</body>
+</html>

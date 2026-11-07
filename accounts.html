@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Account screens · ALEXEA</title>
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="topbar.css">
+<style>
+.card{max-width:420px;margin:0 auto 12px}
+.fld{display:block;margin:0 0 10px;font-size:13px;color:var(--text-2)}
+.fld input{display:block;width:100%;margin-top:4px;color:var(--text)}
+.pw{display:flex;gap:6px}
+.pw input{flex:1;margin-top:4px}
+.pw button{margin-top:4px}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.ur{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface-2);border-radius:10px;padding:8px 12px;margin:0 0 6px}
+.ur .n{flex:1;min-width:140px;font-size:14px}
+.ur .u{font-size:12px;color:var(--text-2);font-family:ui-monospace,Menlo,Consolas,monospace}
+.tmp{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--bg-warn);color:var(--text-warn);border-radius:6px;padding:2px 8px;font-size:13px}
+.big{text-align:center;padding:18px 8px}
+.big .ic{width:44px;height:44px;border-radius:50%;background:var(--bg-warn);color:var(--text-warn);display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:8px}
+.bform{max-width:420px;margin:0 auto 12px;background:var(--surface-1);border:.5px solid var(--border);border-radius:16px;overflow:hidden}
+.bform .hero{border-radius:0;margin:0}
+.fbody{padding:14px 16px}
+.pend{text-align:center}
+.pend .ic{width:44px;height:44px;border-radius:50%;background:var(--bg-warn);color:var(--text-warn);display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div id="v"></div>
+</div>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/session.js"></script>
+<script>
+var showPw=false;
+function $(i){return document.getElementById(i)}
+function brand(t,s){return '<div class="hero"><div class="lgo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><h1>'+t+'</h1><p>'+s+'</p></div>'}
+function esc(x){var e=document.createElement('div');e.textContent=x;return e.innerHTML}
+function ini(n){return (n||'?').replace(/^Dr\.\s*/i,'').charAt(0).toUpperCase()}
+function pwField(id,label,ph){return '<label class="fld">'+label+'<div class="pw"><input id="'+id+'" type="'+(showPw?'text':'password')+'" placeholder="'+ph+'" autocomplete="off"><button type="button" data-pw="1">'+(showPw?'Hide':'Show')+'</button></div></label>'}
+function view(scr){
+  var h='',user=session.user();
+  if(scr=='login'){
+    h='<div class="bform">'+brand('Log in','Use the username your account was created with.')+'<div class="fbody"><label class="fld">Username<input id="lu" autocomplete="off" placeholder="for example sara"></label>'+pwField('lp','Password','Password')+'<p class="er" id="le" style="display:none"></p><div class="bar"><button class="pri" id="lgo">Log in</button><a class="btn" href="#" id="gosignup">Create account</a></div></div></div>';
+  } else if(scr=='signup'){
+    h='<div class="bform">'+brand('Create account','A head must approve your account before you can log in.')+'<div class="fbody"><label class="fld">Full name<input id="sn" dir="auto" placeholder="Dr. Name"></label><label class="fld">Username<input id="su" autocomplete="off" placeholder="at least 3 letters"></label>'+pwField('sp','Password','At least 8 characters')+pwField('sc','Confirm password','Repeat the password')+'<p class="er" id="se" style="display:none"></p><div class="bar"><button class="pri" id="sgo">Create account</button><a class="btn" href="#" id="gologin">I already have an account</a></div></div></div>';
+  } else if(scr=='pending'){
+    h='<div class="bform">'+brand('Waiting for approval','Your account was created.')+'<div class="fbody pend"><div class="ic">…</div><p class="sub">A head needs to approve it before you can log in. Ask one of them to open the Approvals screen.</p><a class="btn" href="#" id="gologin2">Back to log in</a></div></div>';
+  } else if(scr=='approvals' && session.isHead()){
+    loadApprovals();
+    return;
+  }
+  $('v').innerHTML=h;
+  wire(scr);
+}
+function err(id,t){var e=$(id);if(e){e.textContent=t;e.style.display='block'}}
+function wire(scr){
+  if(scr=='login'){
+    $('lgo').onclick=async function(){
+      var u=$('lu').value.trim().toLowerCase(),p=$('lp').value;
+      if(!u||!p)return err('le','Enter your username and password.');
+      try{await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:u,password:p})}).then(function(d){
+        localStorage.setItem('token',d.token);localStorage.setItem('user',JSON.stringify(d.user));
+        var next=new URLSearchParams(location.search).get('next');
+        location.href=next?decodeURIComponent(next):'home.html';
+      });}catch(e){err('le',e.message)}
+    };
+    var gs=$('gosignup'); if(gs) gs.onclick=function(e){e.preventDefault();view('signup')};
+  } else if(scr=='signup'){
+    $('sgo').onclick=async function(){
+      var n=$('sn').value.trim(),u=$('su').value.trim().toLowerCase(),p1=$('sp').value,p2=$('sc').value;
+      if(!n)return err('se','Enter your full name.');
+      if(u.length<3)return err('se','Username needs at least 3 letters.');
+      if(p1.length<8)return err('se','Password needs at least 8 characters.');
+      if(p1!=p2)return err('se','The two passwords do not match.');
+      try{await api('/api/auth/signup',{method:'POST',body:JSON.stringify({name:n,username:u,password:p1})});view('pending');}
+      catch(e){err('se',e.message)}
+    };
+    var gl=$('gologin'); if(gl) gl.onclick=function(e){e.preventDefault();view('login')};
+  } else if(scr=='pending'){
+    var gl2=$('gologin2'); if(gl2) gl2.onclick=function(e){e.preventDefault();view('login')};
+  }
+  document.querySelectorAll('[data-pw]').forEach(function(b){b.onclick=function(){
+    showPw=!showPw;view(scr);
+  }});
+}
+async function loadApprovals(){
+  var pending=await api('/api/users/pending').catch(function(){return {users:[]}}).then(function(d){return d.users||[]});
+  var active=await api('/api/users').catch(function(){return {users:[]}}).then(function(d){return d.users||[]});
+  var h='<div class="hero"><h1>Approvals</h1><p>Only heads can see this screen.</p></div><div class="cnt"><div class="c"><b>'+pending.length+'</b><span>Waiting</span></div><div class="c"><b>'+active.length+'</b><span>Active members</span></div></div><h3 class="sh">Waiting for approval ('+pending.length+')</h3>';
+  if(!pending.length)h+='<p class="empty">Nobody is waiting.</p>';
+  else pending.forEach(function(x){
+    h+='<div class="ur"><span class="av">'+ini(x.name)+'</span><span class="n" dir="auto">'+esc(x.name)+'</span><span class="u">'+x.username+'</span><button class="pri" data-ap="'+x.id+'">Approve</button><button data-rj="'+x.id+'">Reject</button></div>';
+  });
+  h+='<h3 class="sh">Team ('+active.length+')</h3>';
+  active.forEach(function(x){
+    h+='<div class="ur"><span class="av">'+ini(x.name)+'</span><span class="n" dir="auto">'+esc(x.name)+(x.role=='head'?' <span class="pl s-acc">head</span>':'')+'</span><span class="u">'+x.username+'</span>'+(x.role!='head'?'<button data-rs="'+x.id+'">Reset password</button>':'')+'</div>';
+  });
+  $('v').innerHTML=h;
+  $('v').addEventListener('click',async function(e){
+    var b=e.target.closest('button');if(!b)return;
+    if(b.dataset.ap){await api('/api/users/'+b.dataset.ap+'/approve',{method:'POST'});loadApprovals();}
+    else if(b.dataset.rj){await api('/api/users/'+b.dataset.rj+'/reject',{method:'POST'});loadApprovals();}
+    else if(b.dataset.rs){var t='';for(var i=0;i<8;i++)t+='abcdefghjkmnpqrstuvwxyz23456789'.charAt(Math.floor(Math.random()*31));await api('/api/users/'+b.dataset.rs+'/reset-password',{method:'POST',body:JSON.stringify({password:t})});alert('New password: '+t+' (shown once)');loadApprovals();}
+  });
+}
+var u=session.user();
+if(u && u.role==='head'){view('approvals');}
+else if(u){$('v').innerHTML='<div class="hero"><h1>My account</h1><p>'+esc(u.name)+' · '+u.role+'</p></div><div class="bar"><button id="lo" class="pri">Log out</button></div>';document.getElementById('lo').onclick=session.logout;}
+else {view('login');}
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home · design source of truth</title>
+<link rel="stylesheet" href="shared.css">
+<!--
+  DESIGN SOURCE OF TRUTH: Home page (route "/"). Match exactly. Do not restyle.
+  Home has NO top bar. It shows the banner and big cards; each card opens one main page.
+  Every other page shows the branded top bar (with a Home link) at the top.
+  Card summaries are LIVE in the real app (from the API); the numbers below are SAMPLE.
+  The "View as" row is preview-only; the real app uses the logged-in role.
+-->
+<style>
+.hero{min-height:150px}
+.hero .lgo{width:64px;height:64px;border-radius:14px}
+.hero h1{font-size:24px}
+.hu{position:absolute;top:14px;right:14px;z-index:2;display:flex;gap:8px;align-items:center;max-width:none!important}
+.hu .who{font-size:13px;background:rgba(255,255,255,.18);padding:4px 12px;border-radius:99px}
+.hg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:900px){.hg{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){.hg{grid-template-columns:minmax(0,1fr)}.hu{position:static;margin-bottom:8px}}
+.hc{position:relative;display:flex;flex-direction:column;background:var(--surface-1);border:.5px solid var(--border);border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;transition:transform .12s,border-color .12s}
+.hc:hover{transform:translateY(-3px);border-color:var(--border-stronger)}
+.hc:focus-visible{outline:2px solid var(--text-accent);outline-offset:2px}
+.hi{background:var(--surface-2);height:128px;display:flex;align-items:center;justify-content:center;padding:10px;border-bottom:.5px solid var(--border)}
+.hi svg{max-height:100%;width:auto;max-width:100%}
+.hi .tl{display:flex;flex-direction:column;gap:4px;width:100%}
+.hb{padding:12px 14px 14px}
+.hb .t{font-size:17px;font-weight:500;margin:0 0 2px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hb .t span.ar{font-size:18px;color:var(--text-2)}
+.hb .s{font-size:13px;color:var(--text-2);margin:0}
+.bd{position:absolute;top:10px;right:10px;font-size:12px;font-weight:500;padding:2px 10px;border-radius:99px}
+.ft{font-size:12px;color:var(--text-2);text-align:center;margin:16px 0 0}
+.hc:active{transform:scale(.99)}
+@media(min-width:1100px){.hi{height:190px}.hi svg{transform:scale(1.25)}.hb{padding:16px 18px 18px}.hb .t{font-size:20px}.hb .s{font-size:14px}.hg{gap:18px}}
+@media(max-width:540px){.hi{height:150px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="row"><span class="lb">View as</span><button id="rh">Head</button><button id="ri">Member</button></div>
+<div class="hero">
+  <div class="hu"><span class="who" id="who"></span><button id="out">Log out</button></div>
+  <div class="lgo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div>
+  <h1 id="hi">Welcome</h1>
+  <p>ALEXEA Course Manager · Friday 6 November 2026</p>
+</div>
+<div class="hg" id="hg"></div>
+<p class="ft">Tap a card to open that page. Use the logo or Home in the top bar to come back.</p>
+</div>
+<script src="tool-drawings.js"></script>
+<script>
+var head=true;
+/* SAMPLE summaries. In the real app these come from the API. */
+var S={cal:'Next: Basic Laparoscopic Surgery · in 2 days',hands:'Day 1 · 12 dry stations · 24 candidates',att:'5 of 8 on site · 1 late',tools:'21 units · 4 in use',cand:'24 candidates added',pend:2,rep:3,rev:2};
+function $(i){return document.getElementById(i)}
+var ART={
+cal:'<svg viewBox="0 0 200 110" width="200" height="110" aria-hidden="true"><rect x="30" y="6" width="140" height="98" rx="10" fill="#fff" stroke="#C9CDCC"/><rect x="30" y="6" width="140" height="22" rx="10" fill="#1B8FA0"/><rect x="30" y="18" width="140" height="10" fill="#1B8FA0"/><g fill="#D6DAD9"><rect x="42" y="38" width="14" height="10" rx="3"/><rect x="62" y="38" width="14" height="10" rx="3"/><rect x="82" y="38" width="14" height="10" rx="3"/><rect x="42" y="82" width="14" height="10" rx="3"/><rect x="62" y="82" width="14" height="10" rx="3"/></g><g><rect x="102" y="38" width="14" height="10" rx="3" fill="#EF9F7B"/><rect x="122" y="38" width="14" height="10" rx="3" fill="#EF9F7B"/><rect x="142" y="38" width="14" height="10" rx="3" fill="#EF9F7B"/><rect x="42" y="60" width="14" height="10" rx="3" fill="#E98AB5"/><rect x="62" y="60" width="14" height="10" rx="3" fill="#E98AB5"/><rect x="82" y="60" width="14" height="10" rx="3" fill="#E98AB5"/><rect x="102" y="60" width="14" height="10" rx="3" fill="#9A8FE0"/><rect x="122" y="60" width="14" height="10" rx="3" fill="#9A8FE0"/><rect x="82" y="82" width="14" height="10" rx="3" fill="#D6DAD9"/><rect x="102" y="82" width="14" height="10" rx="3" fill="#EF9F7B"/><rect x="122" y="82" width="14" height="10" rx="3" fill="#EF9F7B"/></g></svg>',
+hands:'<svg viewBox="0 0 220 110" width="220" height="110" aria-hidden="true"><g id="hs"><rect x="16" y="14" width="40" height="26" rx="3" fill="#1E2527"/><rect x="19" y="17" width="34" height="20" rx="2" fill="#D3E6E7"/><ellipse cx="30" cy="27" rx="7" ry="4" fill="#1F4A8A"/><ellipse cx="43" cy="27" rx="7" ry="4" fill="#1F4A8A"/><circle cx="36" cy="27" r="3" fill="#E8793A"/><rect x="33" y="40" width="6" height="12" fill="#3A4A4D"/><rect x="12" y="50" width="48" height="14" rx="7" fill="#F6F7F6" stroke="#C9CDCC"/><rect x="20" y="54" width="32" height="6" rx="2" fill="#1F3A3F"/><rect x="18" y="68" width="36" height="6" rx="3" fill="#C9CFD1"/></g><use href="#hs" x="70"/><use href="#hs" x="140"/><rect x="12" y="86" width="196" height="14" rx="7" fill="#E5E1F8"/><rect x="12" y="86" width="98" height="14" rx="7" fill="#D7F0EA"/></svg>',
+att:'<svg viewBox="0 0 200 110" width="200" height="110" aria-hidden="true"><g font-family="sans-serif" font-size="18" font-weight="500" text-anchor="middle"><circle cx="50" cy="55" r="28" fill="#DCE9F8" stroke="#fff" stroke-width="3"/><text x="50" y="62" fill="#1F5FA6">A</text><circle cx="92" cy="55" r="28" fill="#F7DCE8" stroke="#fff" stroke-width="3"/><text x="92" y="62" fill="#8E2F5A">S</text><circle cx="134" cy="55" r="28" fill="#FBEBC4" stroke="#fff" stroke-width="3"/><text x="134" y="62" fill="#7A5600">O</text></g><circle cx="168" cy="82" r="14" fill="#2F9E44" stroke="#fff" stroke-width="3"/><path d="M161 82l5 5 9-10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+cand:'<svg viewBox="0 0 200 110" width="200" height="110" aria-hidden="true"><rect x="16" y="10" width="168" height="92" rx="10" fill="#fff" stroke="#C9CDCC"/><g><rect x="28" y="24" width="56" height="12" rx="6" fill="#DCE9F8"/><rect x="92" y="24" width="40" height="12" rx="6" fill="#D7F0EA"/><rect x="140" y="24" width="32" height="12" rx="6" fill="#D6DAD9"/><rect x="28" y="48" width="56" height="12" rx="6" fill="#F7DCE8"/><rect x="92" y="48" width="40" height="12" rx="6" fill="#FBEBC4" stroke="#D9A93A" stroke-dasharray="3 2"/><rect x="140" y="48" width="32" height="12" rx="6" fill="#D6DAD9"/><rect x="28" y="72" width="56" height="12" rx="6" fill="#DCE9F8"/><rect x="92" y="72" width="40" height="12" rx="6" fill="#D7F0EA"/><rect x="140" y="72" width="32" height="12" rx="6" fill="#D6DAD9"/></g></svg>',
+acc:'<svg viewBox="0 0 200 110" width="200" height="110" aria-hidden="true"><path d="M100 8L146 24V54C146 78 126 96 100 104C74 96 54 78 54 54V24Z" fill="#DCE9F8" stroke="#0A5CA8" stroke-width="3"/><path d="M80 56l14 14 28-30" fill="none" stroke="#0A5CA8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
+ART.act='<svg viewBox="0 0 200 110" width="200" height="110" aria-hidden="true"><path d="M40 12V98" stroke="#C9CDCC" stroke-width="3"/><circle cx="40" cy="22" r="9" fill="#DCE9F8" stroke="#1F5FA6" stroke-width="2"/><circle cx="40" cy="55" r="9" fill="#F8D9D5" stroke="#9B2C20" stroke-width="2"/><circle cx="40" cy="88" r="9" fill="#DDEFD0" stroke="#2F6B14" stroke-width="2"/><g fill="#D6DAD9"><rect x="60" y="14" width="110" height="10" rx="5"/><rect x="60" y="47" width="90" height="10" rx="5"/><rect x="60" y="80" width="120" height="10" rx="5"/></g></svg>';
+function cards(){
+  var c=[
+   {h:'calendar.html',t:'Calendar',s:S.cal,a:ART.cal},
+   {h:'hands-on.html',t:'Hands-on',s:S.hands,a:ART.hands},
+   {h:'attendance.html',t:'Attendance',s:S.att,a:ART.att},
+   {h:'tools.html',t:'Tools',s:S.tools,a:'tools',b:[S.rep+' need repair','s-bad']},
+   {h:'import.html',t:'Candidates',s:S.cand,a:ART.cand,b:[S.rev+' to review','s-warn']},
+   ];
+  if(head){c.push({h:'activity.html',t:'Team activity',s:'What the team did today · 14 actions',a:ART.act},{h:'accounts.html',t:'Approvals',s:'Accounts waiting for a head to approve',a:ART.acc,b:[S.pend+' waiting','s-warn']})}
+  else c.push({h:'accounts.html',t:'My account',s:'Dr. Sara · member',a:ART.acc});
+  $('hg').innerHTML=c.map(function(x){
+    return '<a class="hc" href="'+x.h+'"><div class="hi">'+(x.a=='tools'?'<div class="tl">'+toolSvg('grasper')+toolSvg('l30')+'</div>':x.a)+'</div>'+(x.b?'<span class="bd pl '+x.b[1]+'">'+x.b[0]+'</span>':'')+'<div class="hb"><p class="t">'+x.t+'<span class="ar" aria-hidden="true">›</span></p><p class="s">'+x.s+'</p></div></a>'}).join('');
+  $('rh').className=head?'on':'';$('ri').className=head?'':'on';
+  $('who').textContent=head?'Dr. Ahmed · head':'Dr. Sara · member';
+  $('hi').textContent='Welcome, '+(head?'Dr. Ahmed':'Dr. Sara')}
+$('rh').onclick=function(){head=true;cards()};$('ri').onclick=function(){head=false;cards()};
+$('out').onclick=function(){$('hi').textContent='Logged out (preview). The real app returns to the login screen.'};
+cards();
+</script>
+</body>
+</html>

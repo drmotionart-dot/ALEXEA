@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tools page · design source of truth</title>
+<!--
+  DESIGN SOURCE OF TRUTH for the tools page. Match layout, colors, drawings, labels and
+  behavior exactly. Do not restyle. Drawings come from tool-drawings.js (same folder).
+  The "View as" row exists only in this preview; the real app takes the role from the login.
+  All data below is SAMPLE DATA. Behavior is described in docs/BEHAVIOR.md.
+-->
+<style>
+:root{
+  --page:#FAF9F5;--surface-1:#F1EFE8;--surface-2:#FFFFFF;
+  --border:rgba(20,20,19,.15);--border-strong:rgba(20,20,19,.30);--border-stronger:rgba(20,20,19,.50);
+  --text:#141413;--text-2:#5E5D59;
+  --bg-accent:#DCE9F8;--text-accent:#1F5FA6;
+  --bg-ok:#DDEFD0;--text-ok:#2F6B14;
+  --bg-warn:#FBEBC4;--text-warn:#7A5600;
+  --bg-bad:#F8D9D5;--text-bad:#9B2C20;
+  --radius:8px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --page:#1F1E1D;--surface-1:#2B2A28;--surface-2:#262624;
+  --border:rgba(250,249,245,.15);--border-strong:rgba(250,249,245,.30);--border-stronger:rgba(250,249,245,.50);
+  --text:#FAF9F5;--text-2:#B8B6AD;
+  --bg-accent:#1D3A5C;--text-accent:#A9CDF5;
+  --bg-ok:#1E3F14;--text-ok:#B4E09A;
+  --bg-warn:#4A3A12;--text-warn:#F0CE82;
+  --bg-bad:#4D2420;--text-bad:#F5B5AC;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+button{background:transparent;border:.5px solid var(--border-strong);border-radius:var(--radius);padding:6px 12px;font:inherit;font-size:14px;color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+button:hover{background:var(--surface-1)}
+button:active{transform:scale(.98)}
+button:focus-visible,input:focus-visible,.cd:focus-visible{outline:2px solid var(--text-accent);outline-offset:2px}
+button.on{background:var(--surface-1);border-color:var(--border-stronger)}
+input[type=text],input:not([type]){font:inherit;font-size:14px;color:var(--text);background:var(--surface-2);border:.5px solid var(--border-strong);border-radius:var(--radius);padding:7px 10px}
+svg.i{width:16px;height:16px}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 8px}
+.row .lb{font-size:12px;color:var(--text-2);min-width:52px}
+.sc{flex:1;min-width:150px}
+.er{font-size:13px;color:var(--text-bad);margin:0 0 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.cd{background:var(--surface-1);border:.5px solid var(--border);border-radius:12px;padding:8px 10px;cursor:pointer}
+.cd:hover{border-color:var(--border-strong)}
+.cd.sl{border-color:var(--text)}
+.th{background:var(--surface-2);border-radius:8px;padding:2px 4px;overflow:hidden}
+.th img,.big img{width:100%;height:90px;object-fit:cover;display:block;border-radius:6px}
+.nmx{font-size:13px;font-weight:500;margin:6px 0 0}
+.sr{font-size:11px;color:var(--text-2);font-family:ui-monospace,Menlo,Consolas,monospace;margin:0 0 4px}
+.lc{font-size:12px;color:var(--text-2);margin:4px 0 0}
+.pl{font-size:11px;padding:1px 8px;border-radius:var(--radius);display:inline-block;margin-right:4px}
+.s-a{background:var(--bg-ok);color:var(--text-ok)}
+.s-u{background:var(--bg-accent);color:var(--text-accent)}
+.s-m{background:var(--bg-warn);color:var(--text-warn)}
+.s-r{background:var(--bg-bad);color:var(--text-bad)}
+#dt{background:var(--surface-1);border:.5px solid var(--border);border-radius:12px;padding:12px 14px;margin:0 0 12px;display:none}
+.dg{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px}
+@media(max-width:560px){.dg{grid-template-columns:minmax(0,1fr)}}
+.big{background:var(--surface-2);border-radius:10px;padding:8px}
+.big img{height:auto;max-height:180px}
+.kv{font-size:13px;display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:.5px solid var(--border)}
+.kv span:first-child{color:var(--text-2)}
+.hs{font-size:12px;margin:0;padding:5px 0;border-bottom:.5px solid var(--border)}
+.hs b{font-weight:500}
+h3.sh{font-size:13px;font-weight:500;margin:12px 0 4px}
+.sm{font-size:13px;margin:0 0 10px;padding:8px 12px;background:var(--surface-1);border-radius:var(--radius);display:none}
+.lgd{display:flex;gap:12px;font-size:12px;color:var(--text-2);margin:10px 0 0;flex-wrap:wrap;align-items:center}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+#cv{display:none;margin:0 0 10px;background:var(--surface-1);border-radius:12px;padding:8px}
+#cv video{width:100%;max-height:220px;border-radius:8px;background:#000}
+.empty{font-size:13px;color:var(--text-2)}
+.box{background:var(--surface-1);border:.5px solid var(--border);border-radius:12px;padding:12px 14px;margin:0 0 12px}
+.f2{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.f2 label{font-size:12px;color:var(--text-2);display:block}
+.f2 input,.f2 select{display:block;width:100%;margin-top:4px;font:inherit;font-size:14px;color:var(--text);background:var(--surface-2);border:.5px solid var(--border-strong);border-radius:var(--radius);padding:7px 10px}
+.pv2{background:var(--surface-2);border-radius:10px;padding:6px;max-width:260px}
+@media(min-width:1100px){.wrap{max-width:1280px}.grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}}
+</style>
+<link rel="stylesheet" href="topbar.css">
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <a class="hl" href="home.html" aria-label="Home"><div class="logo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><span class="brand">ALEXEA Course Manager</span></a>
+  <nav class="nav"><a href="home.html">Home</a><a href="calendar.html">Calendar</a><a href="hands-on.html">Hands-on</a><a href="attendance.html">Attendance</a><a class="cur" href="tools.html">Tools</a><a href="import.html">Candidates</a><a href="activity.html">Activity</a><a href="accounts.html">Account</a></nav>
+</header>
+
+<div class="row">
+  <input id="sc" class="sc" placeholder="Search tools, or enter a serial such as ALX-GR-0012" aria-label="Search tools or serial">
+  <button id="scb"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M4 12h16"/></svg>Open serial</button>
+  <button id="cam"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h2l2-3h6l2 3h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>Scan with camera</button>
+  <button id="addb"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add tool</button>
+  <button id="bell" aria-label="Repair notifications"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/></svg><span id="bc">0</span></button>
+</div>
+<p class="er" id="er" style="display:none"></p>
+<div id="cv"><video id="vd" playsinline muted></video><div class="row" style="margin:6px 0 0"><span style="font-size:12px;color:var(--text-2)">Point at the QR code or barcode on the tool</span><button id="cx">Close camera</button></div></div>
+<div class="row"><span class="lb">View as</span><button id="rh">Head</button><button id="ri">Member</button></div>
+<div class="row" id="ct"></div>
+<div class="row" id="sfr"></div>
+<div class="sm" id="sm"></div>
+<div id="addp" class="box" style="display:none"></div>
+<div id="dt"></div>
+<div class="grid" id="g"></div>
+<div class="lgd"><span>Lens codes</span><span><span class="dot" style="background:#1D9E75"></span>0° green</span><span><span class="dot" style="background:#E24B4A"></span>30° red</span><span><span class="dot" style="background:#1a1a1a;border:.5px solid var(--border-strong)"></span>Chameleon black</span></div>
+</div>
+<script src="tool-drawings.js"></script>
+<script>
+/* SAMPLE DATA ONLY. Real data comes from the API (docs/DATA_MODEL.md).
+   Unit fields: s serial, t type code, st a|u|m, reg, last, loc, h history [date,kind,note], c comments [by,date,text,needsRepair] */
+var T={GR:['Grasper, ratchet 5 mm','Hand instruments','grasper'],MD:['Maryland dissector','Hand instruments','maryland'],SC:['Metzenbaum scissors','Hand instruments','scissors'],NH:['Needle holder','Hand instruments','needle'],SI:['Suction and irrigation cannula','Hand instruments','suction'],TR:['Trocar and cannula 10 mm','Access','trocar'],VN:['Veress needle','Access','veress'],L0:['Laparoscope 0° (green)','Optics','l0'],L3:['Laparoscope 30° (red)','Optics','l30'],LC:['Chameleon lens (black)','Optics','lch'],HY:['Hysteroscope set','Gynecology and urology','hyst'],RS:['Resectoscope 26 Fr','Gynecology and urology','resect'],UM:['Uterine manipulator','Gynecology and urology','manip'],HM:['Harmonic handpiece','Energy','harm'],HK:['Monopolar L-hook','Energy','hook'],LS:['Linear stapler','Staplers','lstap'],CS:['Circular stapler','Staplers','cstap']};
+var U=[
+{s:'ALX-GR-0012',t:'GR',st:'a',reg:'2022-03-14',last:'2026-08-20',loc:'',h:[['2026-08-20','Routine check','Jaw alignment ok, ratchet cleaned'],['2025-02-11','Service','Pin replaced']],c:[]},
+{s:'ALX-GR-0013',t:'GR',st:'u',reg:'2022-03-14',last:'2026-07-02',loc:'Day 2 · Station 3 · Ahmed Hassan, Mohamed Ali',h:[['2026-07-02','Routine check','No issues']],c:[['Dr. Sara (member)','2026-11-05','Smooth ratchet, no play in jaw',0]]},
+{s:'ALX-GR-0014',t:'GR',st:'u',reg:'2023-05-10',last:'2026-06-11',loc:'Day 2 · Station 8 · Hala Fathy, Dina Samir',h:[['2026-06-11','Routine check','Jaw teeth ok']],c:[]},
+{s:'ALX-GR-0015',t:'GR',st:'m',reg:'2023-05-10',last:'2026-11-02',loc:'At repair workshop since 2 Nov 2026',h:[['2026-11-02','Sent for repair','Loose jaw pin']],c:[['Dr. Omar (member)','2026-11-01','Jaw wobbles, needs repair',1]]},
+{s:'ALX-MD-0004',t:'MD',st:'a',reg:'2023-01-09',last:'2026-06-18',loc:'',h:[['2026-06-18','Routine check','Insulation checked']],c:[]},
+{s:'ALX-SC-0007',t:'SC',st:'m',reg:'2021-10-30',last:'2026-10-28',loc:'At repair workshop since 28 Oct 2026',h:[['2026-10-28','Sent for sharpening','Blades dull after wet-lab day'],['2024-05-03','Sharpening','Blades re-ground']],c:[['Dr. Omar (member)','2026-10-27','Blades not cutting cleanly, needs repair',1]]},
+{s:'ALX-NH-0009',t:'NH',st:'a',reg:'2023-06-21',last:'2026-05-14',loc:'',h:[['2026-05-14','Routine check','Jaw inserts ok']],c:[]},
+{s:'ALX-SI-0002',t:'SI',st:'a',reg:'2022-11-02',last:'2026-04-09',loc:'',h:[['2026-04-09','Routine check','Valve seals replaced']],c:[]},
+{s:'ALX-TR-0015',t:'TR',st:'a',reg:'2024-02-17',last:'2026-03-01',loc:'',h:[['2026-03-01','Routine check','Valve flap ok']],c:[]},
+{s:'ALX-VN-0003',t:'VN',st:'a',reg:'2024-02-17',last:'2026-03-01',loc:'',h:[['2026-03-01','Routine check','Spring tested']],c:[]},
+{s:'ALX-L0-0001',t:'L0',st:'u',reg:'2021-06-12',last:'2026-09-10',loc:'Day 2 · Station 1 · Omar Khaled, Yousef Nasser',h:[['2026-09-10','Cleaning and check','Image clear'],['2023-08-22','Service','Light post cleaned']],c:[]},
+{s:'ALX-L3-0002',t:'L3',st:'a',reg:'2021-06-12',last:'2026-09-10',loc:'',h:[['2026-09-10','Cleaning and check','Slight fogging at distal end']],c:[['Dr. Nour (member)','2026-11-04','Fogging after 10 minutes, please check seal',1]]},
+{s:'ALX-LC-0001',t:'LC',st:'a',reg:'2025-09-01',last:'2026-09-10',loc:'',h:[['2026-09-10','Cleaning and check','Image clear']],c:[]},
+{s:'ALX-HY-0001',t:'HY',st:'a',reg:'2022-04-04',last:'2026-02-12',loc:'',h:[['2026-02-12','Routine check','Stopcocks greased']],c:[]},
+{s:'ALX-RS-0001',t:'RS',st:'m',reg:'2022-04-04',last:'2026-10-15',loc:'At repair workshop since 15 Oct 2026',h:[['2026-10-15','Sent for repair','Sheath insulation worn']],c:[['Dr. Ahmed (head)','2026-10-14','Insulation cracked at tip',1]]},
+{s:'ALX-UM-0005',t:'UM',st:'a',reg:'2023-09-19',last:'2026-01-30',loc:'',h:[['2026-01-30','Routine check','Lock lever ok']],c:[]},
+{s:'ALX-HM-0003',t:'HM',st:'u',reg:'2024-07-08',last:'2026-10-01',loc:'Assigned by head · Animal lab · Upper team',h:[['2026-10-01','Routine check','Blade tip ok']],c:[]},
+{s:'ALX-HK-0002',t:'HK',st:'a',reg:'2024-03-12',last:'2026-05-30',loc:'',h:[['2026-05-30','Routine check','Insulation tested']],c:[]},
+{s:'ALX-HK-0003',t:'HK',st:'u',reg:'2024-03-12',last:'2026-05-30',loc:'Day 2 · Station 5 · Mahmoud Ezzat, Amr Fawzy',h:[['2026-05-30','Routine check','Insulation tested']],c:[]},
+{s:'ALX-LS-0002',t:'LS',st:'a',reg:'2025-01-20',last:'2026-06-25',loc:'',h:[['2026-06-25','Routine check','Firing mechanism ok']],c:[]},
+{s:'ALX-CS-0001',t:'CS',st:'a',reg:'2025-01-20',last:'2026-06-25',loc:'',h:[['2026-06-25','Routine check','Wing knob smooth']],c:[]}
+];
+var TODAY='2026-11-06';
+var cats=['All','Access','Optics','Hand instruments','Energy','Staplers','Gynecology and urology'],cat='All',head=true,sel=null,flt=false,sf2='all',q='',stream=null,tm=null;
+var SN={a:['Available','s-a'],u:['In use','s-u'],m:['Maintenance','s-m']};
+var PH='<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M4 17l5-4 4 3 3-2 4 3"/></svg>';
+function $(i){return document.getElementById(i)}
+function fd(d){var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],p=d.split('-');return +p[2]+' '+m[+p[1]-1]+' '+p[0]}
+function esc(x){var e=document.createElement('div');e.textContent=x;return e.innerHTML}
+function flagged(u){return u.c.some(function(c){return c[3]})}
+function pills(u){return '<span class="pl '+SN[u.st][1]+'">'+SN[u.st][0]+'</span>'+(flagged(u)?'<span class="pl s-r">Needs repair</span>':'')}
+function find(s){for(var i=0;i<U.length;i++)if(U[i].s===s)return U[i]}
+function pic(u){return u.photo?'<img src="'+u.photo+'" alt="Photo of '+u.s+'">':toolSvg(T[u.t][2])}
+function showErr(m){var e=$('er');e.textContent=m;e.style.display='block'}
+function list(){
+  var ql=q.toLowerCase(),r=U.filter(function(u){var t=T[u.t];return (cat=='All'||t[1]==cat)&&(!flt||flagged(u))&&(sf2=='all'||u.st==sf2)&&(!ql||(t[0]+' '+u.s).toLowerCase().indexOf(ql)>-1)});
+  if(ql){var o={u:0,a:1,m:2};r.sort(function(a,b){return o[a.st]-o[b.st]})}
+  $('g').innerHTML=r.map(function(u){var t=T[u.t];return '<div class="cd'+(sel===u.s?' sl':'')+'" data-s="'+u.s+'" tabindex="0" role="button"><div class="th">'+pic(u)+'</div><p class="nmx" dir="auto">'+t[0]+'</p><p class="sr">'+u.s+'</p>'+pills(u)+(u.loc?'<p class="lc" dir="auto">'+esc(u.loc)+'</p>':'')+'</div>'}).join('')||'<p class="empty">No tools match. Try another name or clear the filters.</p>';
+  var sm=$('sm');
+  if(ql&&r.length){var n={u:0,a:0,m:0};r.forEach(function(u){n[u.st]++});sm.innerHTML='<b style="font-weight:500">'+r.length+' match</b> · '+n.u+' in use · '+n.a+' available · '+n.m+' in maintenance';sm.style.display='block'}else sm.style.display='none';
+  $('bc').textContent=U.filter(flagged).length;$('bell').className=flt?'on':'';
+  $('ct').innerHTML='<span class="lb">Type</span>'+cats.map(function(c){return '<button data-c="'+c+'" class="'+(c==cat?'on':'')+'">'+c+'</button>'}).join('');
+  var sfs=[['all','All'],['u','In use'],['a','Available'],['m','Maintenance']];
+  $('sfr').innerHTML='<span class="lb">Status</span>'+sfs.map(function(x){return '<button data-f="'+x[0]+'" class="'+(sf2==x[0]?'on':'')+'">'+x[1]+'</button>'}).join('');
+  $('rh').className=head?'on':'';$('ri').className=head?'':'on';
+}
+function detail(){
+  var el=$('dt');if(!sel){el.style.display='none';return}
+  var u=find(sel),t=T[u.t],yrs=Math.floor((new Date(TODAY)-new Date(u.reg))/31557600000);
+  var h='<div class="dg"><div><div class="big">'+pic(u)+'</div>'+(head?'<div class="row" style="margin:8px 0 0"><button id="ph">'+PH+(u.photo?'Replace photo':'Add photo')+'</button>'+(u.photo?'<button id="nph">Use drawing</button>':'')+'<input type="file" id="pf" accept="image/*" capture="environment" style="display:none"></div>':'')+'<p class="nmx" style="font-size:16px" dir="auto">'+t[0]+'</p><p class="sr" style="font-size:12px">'+u.s+'</p>'+pills(u)+'</div><div>';
+  h+='<div class="kv"><span>Registered</span><span>'+fd(u.reg)+' · '+yrs+' yr</span></div><div class="kv"><span>Last maintenance</span><span>'+fd(u.last)+'</span></div><div class="kv"><span>Location</span><span style="text-align:right" dir="auto">'+(u.loc?esc(u.loc):'In stock')+'</span></div>';
+  if(head){h+='<div class="row" style="margin-top:10px"><span class="lb">Status</span><button data-st="a">Available</button><button data-st="u">In use</button><button data-st="m">Maintenance</button></div>'+(flagged(u)?'<div class="row"><button data-clr="1">Clear repair flag</button></div>':'')}
+  else{h+='<div class="row" style="margin-top:10px"><button data-st="u">Start using</button><button data-st="a">Return to stock</button></div>'}
+  h+='</div></div><h3 class="sh">Maintenance history</h3>'+u.h.map(function(x){return '<p class="hs"><b>'+fd(x[0])+'</b> · '+esc(x[1])+' — '+esc(x[2])+'</p>'}).join('');
+  h+='<h3 class="sh">Reports and comments</h3>'+(u.c.length?u.c.map(function(x){return '<p class="hs"><b>'+esc(x[0])+'</b> · '+fd(x[1])+(x[3]?' <span class="pl s-r">Repair</span>':'')+'<br><span dir="auto">'+esc(x[2])+'</span></p>'}).join(''):'<p class="hs empty">No comments yet.</p>');
+  h+='<div class="row" style="margin-top:8px"><input id="cm" dir="auto" placeholder="Leave a comment" style="flex:1;min-width:140px"><label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="fl"> Needs repair</label><button id="po">Post</button></div><p class="er" id="ce" style="display:none"></p><p id="nt" style="font-size:12px;color:var(--text-ok);display:none;margin:4px 0 0">Heads notified.</p>';
+  el.innerHTML=h;el.style.display='block';
+  var ph=$('ph');if(ph){ph.onclick=function(){$('pf').click()};$('pf').onchange=function(e){var f=e.target.files[0];if(f){u.photo=URL.createObjectURL(f);list();detail()}};var n=$('nph');if(n)n.onclick=function(){u.photo=null;list();detail()}}
+}
+function pick(s){sel=s;list();detail();$('dt').scrollIntoView({block:'nearest',behavior:'smooth'})}
+function stopCam(){if(tm){clearInterval(tm);tm=null}if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}$('cv').style.display='none'}
+function reset(){cat='All';flt=false;sf2='all';q=''}
+$('g').addEventListener('click',function(e){var c=e.target.closest('.cd');if(c)pick(c.dataset.s)});
+$('g').addEventListener('keydown',function(e){if(e.key=='Enter'){var c=e.target.closest('.cd');if(c)pick(c.dataset.s)}});
+$('ct').addEventListener('click',function(e){var b=e.target.closest('button');if(b){cat=b.dataset.c;flt=false;list()}});
+$('sfr').addEventListener('click',function(e){var b=e.target.closest('button');if(b){sf2=b.dataset.f;list()}});
+$('dt').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;var u=find(sel);
+  if(b.dataset.st){u.st=b.dataset.st;if(u.st=='a')u.loc='';else if(u.st=='m')u.loc='At repair workshop';else if(!u.loc)u.loc='Assigned to: '+(head?'head':'member');list();detail()}
+  else if(b.dataset.clr){u.c.forEach(function(c){c[3]=0});list();detail()}
+  else if(b.id=='po'){var v=$('cm').value.trim(),er=$('ce');
+    if(!v){er.textContent='Write a comment first';er.style.display='block';return}
+    var f=$('fl').checked;u.c.push([head?'Dr. Ahmed (head)':'Dr. Sara (member)',TODAY,v,f?1:0]);list();detail();if(f)$('nt').style.display='block'}
+});
+function openSerial(){var v=$('sc').value.trim().toUpperCase(),u=find(v);
+  if(!u){showErr(v?'No tool with serial '+v+'. Check the number and try again.':'Enter a serial number first');return}
+  $('er').style.display='none';reset();pick(u.s)}
+$('scb').onclick=openSerial;
+$('sc').addEventListener('input',function(e){q=e.target.value.trim();$('er').style.display='none';list()});
+$('sc').addEventListener('keydown',function(e){if(e.key=='Enter'&&find(e.target.value.trim().toUpperCase()))openSerial()});
+$('cam').onclick=function(){
+  $('er').style.display='none';
+  if(!window.BarcodeDetector||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){showErr('Camera scanning is not available on this device. Enter the serial number instead.');return}
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(s){
+    stream=s;var v=$('vd');v.srcObject=s;v.play();$('cv').style.display='block';
+    var det=new BarcodeDetector({formats:['qr_code','code_128','ean_13']});
+    tm=setInterval(function(){det.detect(v).then(function(c){if(c.length){var u=find(c[0].rawValue.trim().toUpperCase());stopCam();if(u){reset();pick(u.s)}else showErr('That code is not a registered tool.')}}).catch(function(){})},400)
+  }).catch(function(){showErr('Camera access was blocked. Allow camera access in your browser and try again.')})};
+$('cx').onclick=stopCam;
+$('bell').onclick=function(){flt=!flt;list()};
+$('rh').onclick=function(){head=true;list();detail()};
+$('ri').onclick=function(){head=false;list();detail()};
+/* ===== Add tool (heads only): choose a preset category and type, serial is suggested, registration date, optional photo ===== */
+var CATS6=['Access','Optics','Hand instruments','Energy','Staplers','Gynecology and urology'];
+var AP={cat:'Access',type:'TR',serial:'',auto:true,date:TODAY,name:'',draw:'grasper',photo:null,err:''};
+function nextSerial(code){var mx=0;U.forEach(function(u){if(u.t==code){var n=+u.s.split('-')[2];if(n>mx)mx=n}});return 'ALX-'+code+'-'+('000'+(mx+1)).slice(-4)}
+function typesIn(c){return Object.keys(T).filter(function(k){return T[k][1]==c})}
+function syncAdd(){$('addb').style.display=head?'inline-flex':'none';if(!head)$('addp').style.display='none'}
+function addPanel(){
+  var el=$('addp'),ts=typesIn(AP.cat);if(AP.type!='__new'&&ts.indexOf(AP.type)<0)AP.type=ts[0]||'__new';
+  var code=AP.type=='__new'?'NEW':AP.type;if(AP.auto)AP.serial=AP.type=='__new'?'':nextSerial(code);
+  var dr=AP.type=='__new'?AP.draw:T[AP.type][2];
+  el.innerHTML='<h3 class="sh" style="margin-top:0">Add a tool</h3><div class="f2">'
+   +'<label>Category<select id="apc">'+CATS6.map(function(c){return '<option'+(c==AP.cat?' selected':'')+'>'+c+'</option>'}).join('')+'</select></label>'
+   +'<label>Type<select id="apt">'+ts.map(function(k){return '<option value="'+k+'"'+(k==AP.type?' selected':'')+'>'+T[k][0]+'</option>'}).join('')+'<option value="__new"'+(AP.type=='__new'?' selected':'')+'>New type…</option></select></label>'
+   +(AP.type=='__new'?'<label>New type name<input id="apn" value="'+esc(AP.name)+'" placeholder="for example Claw grasper"></label><label>Closest drawing<select id="apd">'+TOOL_DRAWING_KEYS.map(function(k){return '<option'+(k==AP.draw?' selected':'')+'>'+k+'</option>'}).join('')+'</select></label>':'')
+   +'<label>Serial number<input id="aps" value="'+esc(AP.serial)+'" placeholder="ALX-GR-0016"></label>'
+   +'<label>Registration date<input id="apr" type="date" value="'+AP.date+'"></label>'
+   +'<label>Photo (optional)<input id="app" type="file" accept="image/*" capture="environment"></label></div>'
+   +'<div class="row" style="margin-top:10px"><div class="pv2" style="width:220px">'+(AP.photo?'<img src="'+AP.photo+'" alt="Photo preview" style="width:100%;border-radius:6px;display:block">':toolSvg(dr))+'</div></div>'
+   +(AP.err?'<p class="er">'+AP.err+'</p>':'')
+   +'<div class="row"><button class="pri" id="aps2">Save tool</button><button id="apx">Cancel</button></div><p class="nt">The serial number is suggested from the type. Print its QR label from the tool page in the real app.</p>';
+  el.style.display='block'}
+$('addb').onclick=function(){AP={cat:'Access',type:'TR',serial:'',auto:true,date:TODAY,name:'',draw:'grasper',photo:null,err:''};$('dt').style.display='none';addPanel();$('addp').scrollIntoView({block:'nearest',behavior:'smooth'})};
+$('addp').addEventListener('change',function(e){var t=e.target;
+  if(t.id=='apc'){AP.cat=t.value;AP.type=typesIn(AP.cat)[0]||'__new';AP.auto=true;AP.err='';addPanel()}
+  else if(t.id=='apt'){AP.type=t.value;AP.auto=true;AP.err='';addPanel()}
+  else if(t.id=='apd'){AP.draw=t.value;addPanel()}
+  else if(t.id=='app'&&t.files[0]){AP.photo=URL.createObjectURL(t.files[0]);addPanel()}});
+$('addp').addEventListener('input',function(e){var t=e.target;if(t.id=='aps'){AP.serial=t.value;AP.auto=false}if(t.id=='apn')AP.name=t.value;if(t.id=='apr')AP.date=t.value});
+$('addp').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+  if(b.id=='apx'){$('addp').style.display='none';return}
+  if(b.id=='aps2'){var s=AP.serial.trim().toUpperCase(),code=AP.type;
+    if(AP.type=='__new'){if(AP.name.trim().length<3){AP.err='Type a name for the new type (at least 3 letters).';return addPanel()}
+      var w=AP.name.trim().toUpperCase().replace(/[^A-Z ]/g,'').split(' '),c=(w[0].charAt(0)+(w[1]?w[1].charAt(0):w[0].charAt(1))).toUpperCase(),n=0;while(T[c+(n||'')])n++;code=c+(n||'')}
+    if(!/^ALX-[A-Z0-9]{2,3}-\d{4}$/.test(s)){AP.err='The serial number should look like ALX-GR-0016.';return addPanel()}
+    if(find(s)){AP.err='That serial number is already registered.';return addPanel()}
+    if(!AP.date||AP.date>TODAY){AP.err='Choose a registration date that is not in the future.';return addPanel()}
+    if(AP.type=='__new')T[code]=[AP.name.trim(),AP.cat,AP.draw];
+    U.push({s:s,t:code,st:'a',reg:AP.date,last:AP.date,loc:'',h:[[AP.date,'Registered','Added to the inventory']],c:[],photo:AP.photo||undefined});
+    $('addp').style.display='none';reset();pick(s)}});
+var rh0=$('rh').onclick,ri0=$('ri').onclick;
+$('rh').onclick=function(){rh0();syncAdd()};$('ri').onclick=function(){ri0();syncAdd()};
+syncAdd();
+list();
+</script>
+</body>
+</html>

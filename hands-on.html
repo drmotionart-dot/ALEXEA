@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hands-on page · design source of truth</title>
+<!--
+  DESIGN SOURCE OF TRUTH for the hands-on page. Match layout, colors, drawings,
+  labels and behavior exactly. Do not restyle. Colors are CSS variables so the
+  app supports light and dark mode. Icons are inline SVG (no external files).
+  Candidate names use dir="auto" so Arabic and English display correctly.
+-->
+<style>
+:root{
+  --page:#FAF9F5;--surface-1:#F1EFE8;--surface-2:#FFFFFF;
+  --border:rgba(20,20,19,.15);--border-strong:rgba(20,20,19,.30);--border-stronger:rgba(20,20,19,.50);
+  --text:#141413;--text-2:#5E5D59;
+  --bg-accent:#DCE9F8;--text-accent:#1F5FA6;
+  --bg-mag:#F7DCE8;--text-mag:#8E2F5A;
+  --bg-warn:#FBEBC4;--text-warn:#7A5600;--border-warn:#D9A93A;
+  --bg-aqua:#D7F0EA;--text-aqua:#0B6B5B;
+  --bg-orange:#FBE0CF;--text-orange:#8A3F12;
+  --bg-violet:#E5E1F8;--text-violet:#4B3FA6;
+  --radius:8px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --page:#1F1E1D;--surface-1:#2B2A28;--surface-2:#262624;
+  --border:rgba(250,249,245,.15);--border-strong:rgba(250,249,245,.30);--border-stronger:rgba(250,249,245,.50);
+  --text:#FAF9F5;--text-2:#B8B6AD;
+  --bg-accent:#1D3A5C;--text-accent:#A9CDF5;
+  --bg-mag:#4A2438;--text-mag:#F2B8D3;
+  --bg-warn:#4A3A12;--text-warn:#F0CE82;--border-warn:#8A6A1E;
+  --bg-aqua:#123F37;--text-aqua:#9BE0D0;
+  --bg-orange:#4A2A16;--text-orange:#F2C3A3;
+  --bg-violet:#2E2A5A;--text-violet:#C9C2F5;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+button{background:transparent;border:.5px solid var(--border-strong);border-radius:var(--radius);padding:6px 12px;font:inherit;font-size:14px;color:var(--text);cursor:pointer}
+button:hover{background:var(--surface-1)}
+button:active{transform:scale(.98)}
+button:focus-visible{outline:2px solid var(--text-accent);outline-offset:2px}
+button.on{background:var(--surface-1);border-color:var(--border-stronger)}
+.hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 8px}
+.hd .t{font-weight:500;font-size:15px}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 8px}
+.row .lb{font-size:12px;color:var(--text-2);min-width:52px}
+.right{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+@media(max-width:640px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.grid{grid-template-columns:minmax(0,1fr)}}
+@media(min-width:1100px){.wrap{max-width:1280px}.grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.st{background:var(--surface-1);border:.5px solid var(--border);border-radius:12px;padding:8px 10px 10px}
+.sn{font-size:12px;color:var(--text-2);margin:0 0 2px;display:flex;justify-content:space-between;align-items:center}
+.tp{font-size:11px;padding:1px 8px;border-radius:var(--radius)}
+.t-d{background:var(--bg-aqua);color:var(--text-aqua)}
+.t-w{background:var(--bg-orange);color:var(--text-orange)}
+.t-a{background:var(--bg-violet);color:var(--text-violet)}
+.nm{display:flex;align-items:center;gap:6px;border-radius:var(--radius);padding:4px 6px;margin-top:5px;font-size:12px;border:.5px solid transparent}
+.nm .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm .c{font-size:11px;opacity:.8}
+.nm button{padding:0 4px;height:22px;min-height:0;line-height:1;display:inline-flex;align-items:center;color:inherit;border-color:currentColor;border-width:.5px;opacity:.9}
+.nm svg{width:14px;height:14px}
+.m{background:var(--bg-accent);color:var(--text-accent)}
+.f{background:var(--bg-mag);color:var(--text-mag)}
+.u{background:var(--bg-warn);color:var(--text-warn);border:.5px dashed var(--border-warn)}
+.sel{border-color:var(--text)!important}
+.q{font-weight:500;cursor:pointer;border:.5px solid currentColor;border-radius:50%;width:18px;height:18px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:11px}
+.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text-2);margin-top:12px;align-items:center}
+.sq{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+#msg{font-size:13px;color:var(--text-2);margin:0 0 8px;display:none}
+.lock{font-size:12px;padding:2px 10px;border-radius:var(--radius);background:var(--bg-warn);color:var(--text-warn);display:none}
+/* Present mode: bigger names, controls hidden */
+body.present .top,body.present .controls,body.present .lg,body.present .nm button,body.present .q{display:none}
+body.present .nm{font-size:17px;padding:8px 10px}
+body.present .nm .c{font-size:14px}
+body.present .sn{font-size:14px}
+body.present .tp{font-size:13px}
+</style>
+<link rel="stylesheet" href="topbar.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<g id="mon"><rect x="106" y="54" width="8" height="34" rx="2" fill="#3A4A4D"/><rect x="46" y="2" width="128" height="58" rx="5" fill="#1E2527"/><rect x="51" y="7" width="118" height="48" rx="2" fill="#D3E6E7"/><ellipse cx="88" cy="26" rx="22" ry="9" fill="#1F4A8A"/><ellipse cx="132" cy="26" rx="22" ry="9" fill="#1F4A8A"/><ellipse cx="110" cy="34" rx="30" ry="7" fill="#2F66B0"/><circle cx="110" cy="30" r="9" fill="#E8793A"/><circle cx="110" cy="30" r="4" fill="#F4C542"/><rect x="56" y="44" width="30" height="2" rx="1" fill="#8FB3B6"/><rect x="134" y="44" width="30" height="2" rx="1" fill="#8FB3B6"/><rect x="164" y="49" width="3" height="3" rx="1" fill="#5DCAA5"/></g>
+<g id="hl"><line x1="80" y1="81" x2="46" y2="62" stroke="#8F9594" stroke-width="3.5" stroke-linecap="round"/><line x1="80" y1="81" x2="46" y2="62" stroke="#D5D9D8" stroke-width="1.2" stroke-linecap="round"/><g transform="rotate(-30 40 58)"><rect x="32" y="48" width="14" height="16" rx="5" fill="#2A2F30"/><circle cx="36" cy="66" r="4" fill="none" stroke="#6B7473" stroke-width="2"/><circle cx="43" cy="66" r="4" fill="none" stroke="#6B7473" stroke-width="2"/></g></g>
+<g id="hr"><line x1="140" y1="81" x2="174" y2="62" stroke="#8F9594" stroke-width="3.5" stroke-linecap="round"/><line x1="140" y1="81" x2="174" y2="62" stroke="#D5D9D8" stroke-width="1.2" stroke-linecap="round"/><g transform="rotate(30 180 58)"><rect x="174" y="48" width="14" height="16" rx="5" fill="#2A2F30"/><circle cx="177" cy="66" r="4" fill="none" stroke="#6B7473" stroke-width="2"/><circle cx="184" cy="66" r="4" fill="none" stroke="#6B7473" stroke-width="2"/></g></g>
+<symbol id="d" viewBox="0 0 220 200">
+<ellipse cx="110" cy="188" rx="86" ry="9" fill="rgba(0,0,0,0.12)"/><use href="#mon"/>
+<rect x="104" y="114" width="12" height="56" rx="2" fill="#2A2F30"/><rect x="107" y="114" width="3" height="56" fill="#4A5557"/>
+<rect x="44" y="168" width="132" height="10" rx="5" fill="#EDEFEE" stroke="#C9CDCC"/><rect x="52" y="170" width="116" height="3" rx="1.5" fill="#FFFFFF"/>
+<circle cx="58" cy="182" r="5.5" fill="#2A2F30"/><circle cx="162" cy="182" r="5.5" fill="#2A2F30"/><circle cx="86" cy="181" r="4" fill="#3A4A4D"/><circle cx="134" cy="181" r="4" fill="#3A4A4D"/>
+<rect x="84" y="190" width="18" height="7" rx="3" fill="#3A4A4D"/><rect x="118" y="190" width="18" height="7" rx="3" fill="#3A4A4D"/>
+<path d="M186 104 C206 112 204 148 172 170" fill="none" stroke="#1F2425" stroke-width="2.2" stroke-linecap="round"/>
+<rect x="30" y="80" width="160" height="40" rx="14" fill="#F6F7F6" stroke="#C9CDCC"/><rect x="38" y="76" width="144" height="12" rx="6" fill="#E4E7E6" stroke="#C9CDCC"/><rect x="38" y="107" width="144" height="5" rx="2.5" fill="#DADEDD"/>
+<rect x="54" y="92" width="112" height="15" rx="4" fill="#1F3A3F"/><rect x="62" y="97" width="34" height="2.5" rx="1" fill="#5DCAA5"/><rect x="62" y="101.5" width="20" height="2" rx="1" fill="#5F8F8A"/><circle cx="146" cy="99.5" r="2.5" fill="#5DCAA5"/><circle cx="154" cy="99.5" r="2.5" fill="#85B7EB"/>
+<ellipse cx="80" cy="82" rx="9" ry="3.5" fill="#2A2F30"/><ellipse cx="140" cy="82" rx="9" ry="3.5" fill="#2A2F30"/><ellipse cx="110" cy="81" rx="6" ry="2.5" fill="#2A2F30"/>
+<use href="#hl"/><use href="#hr"/></symbol>
+<symbol id="w" viewBox="0 0 220 200">
+<ellipse cx="110" cy="190" rx="86" ry="8" fill="rgba(0,0,0,0.12)"/><use href="#mon"/>
+<rect x="44" y="132" width="8" height="48" rx="2" fill="#AEB5B8"/><rect x="168" y="132" width="8" height="48" rx="2" fill="#AEB5B8"/>
+<rect x="46" y="164" width="128" height="5" rx="2" fill="#B5BCBF"/>
+<circle cx="48" cy="184" r="4.5" fill="#2A2F30"/><circle cx="172" cy="184" r="4.5" fill="#2A2F30"/>
+<rect x="38" y="126" width="144" height="6" rx="2" fill="#B5BCBF"/>
+<rect x="30" y="118" width="160" height="9" rx="3" fill="#D3D9DB" stroke="#A8AFB2"/><rect x="36" y="119" width="148" height="2.5" rx="1" fill="#F2F5F6"/>
+<rect x="54" y="88" width="112" height="31" rx="10" fill="#2F3637"/><rect x="60" y="90" width="100" height="6" rx="3" fill="#4A5557"/>
+<rect x="64" y="99" width="92" height="16" rx="5" fill="#16302C"/><ellipse cx="110" cy="108" rx="34" ry="6" fill="#C99B92"/><ellipse cx="110" cy="106" rx="26" ry="3" fill="#DDB4AC"/>
+<ellipse cx="80" cy="91" rx="8" ry="3" fill="#0F1213"/><ellipse cx="140" cy="91" rx="8" ry="3" fill="#0F1213"/>
+<line x1="80" y1="90" x2="46" y2="64" stroke="#8F9594" stroke-width="3.5" stroke-linecap="round"/><line x1="80" y1="90" x2="46" y2="64" stroke="#D5D9D8" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="140" y1="90" x2="174" y2="64" stroke="#8F9594" stroke-width="3.5" stroke-linecap="round"/><line x1="140" y1="90" x2="174" y2="64" stroke="#D5D9D8" stroke-width="1.2" stroke-linecap="round"/>
+<g transform="rotate(-30 40 60)"><rect x="32" y="50" width="14" height="16" rx="5" fill="#2A2F30"/><circle cx="36" cy="68" r="4" fill="none" stroke="#6B7473" stroke-width="2"/><circle cx="43" cy="68" r="4" fill="none" stroke="#6B7473" stroke-width="2"/></g>
+<g transform="rotate(30 180 60)"><rect x="174" y="50" width="14" height="16" rx="5" fill="#2A2F30"/><circle cx="177" cy="68" r="4" fill="none" stroke="#6B7473" stroke-width="2"/><circle cx="184" cy="68" r="4" fill="none" stroke="#6B7473" stroke-width="2"/></g></symbol>
+<symbol id="a" viewBox="0 0 220 200">
+<ellipse cx="110" cy="190" rx="90" ry="8" fill="rgba(0,0,0,0.12)"/><use href="#mon"/>
+<rect x="104" y="124" width="12" height="46" rx="2" fill="#9AA3A6"/><rect x="60" y="168" width="100" height="10" rx="5" fill="#C9CFD1" stroke="#A8AFB2"/>
+<circle cx="70" cy="182" r="4.5" fill="#2A2F30"/><circle cx="150" cy="182" r="4.5" fill="#2A2F30"/>
+<rect x="26" y="112" width="168" height="13" rx="6" fill="#DDE3E5" stroke="#B5BCBF"/>
+<path d="M42 113 C42 80 178 80 178 113 Z" fill="#3B8DBF"/><path d="M60 100 C80 86 140 86 160 100" fill="none" stroke="#6FB4DC" stroke-width="3" stroke-linecap="round"/>
+<ellipse cx="110" cy="96" rx="16" ry="5" fill="#2B6E96"/>
+<ellipse cx="86" cy="93" rx="7" ry="2.8" fill="#1F4F6E"/><ellipse cx="134" cy="93" rx="7" ry="2.8" fill="#1F4F6E"/>
+<line x1="86" y1="92" x2="50" y2="64" stroke="#8F9594" stroke-width="3.5" stroke-linecap="round"/><line x1="86" y1="92" x2="50" y2="64" stroke="#D5D9D8" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="134" y1="92" x2="170" y2="64" stroke="#8F9594" stroke-width="3.5" stroke-linecap="round"/><line x1="134" y1="92" x2="170" y2="64" stroke="#D5D9D8" stroke-width="1.2" stroke-linecap="round"/>
+<g transform="rotate(-35 44 60)"><rect x="36" y="50" width="14" height="16" rx="5" fill="#2A2F30"/><circle cx="40" cy="68" r="4" fill="none" stroke="#6B7473" stroke-width="2"/><circle cx="47" cy="68" r="4" fill="none" stroke="#6B7473" stroke-width="2"/></g>
+<g transform="rotate(35 176 60)"><rect x="170" y="50" width="14" height="16" rx="5" fill="#2A2F30"/><circle cx="173" cy="68" r="4" fill="none" stroke="#6B7473" stroke-width="2"/><circle cx="180" cy="68" r="4" fill="none" stroke="#6B7473" stroke-width="2"/></g>
+<rect x="4" y="72" width="30" height="22" rx="3" fill="#1E2527"/><path d="M8 84 L14 84 L16 78 L19 90 L22 84 L30 84" fill="none" stroke="#5DCAA5" stroke-width="1.5"/>
+<rect x="17" y="94" width="4" height="62" fill="#9AA3A6"/><rect x="6" y="156" width="26" height="5" rx="2" fill="#B5BCBF"/></symbol>
+</defs></svg>
+
+<div class="wrap">
+<header class="top">
+  <a class="hl" href="home.html" aria-label="Home"><div class="logo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><span class="brand">ALEXEA Course Manager</span></a>
+  <nav class="nav"><a href="home.html">Home</a><a href="calendar.html">Calendar</a><a class="cur" href="hands-on.html">Hands-on</a><a href="attendance.html">Attendance</a><a href="tools.html">Tools</a><a href="import.html">Candidates</a><a href="activity.html">Activity</a><a href="accounts.html">Account</a></nav>
+</header>
+
+  <div class="hd">
+    <span class="t" id="title">Basic laparoscopic workshop · Day 2</span>
+    <span class="lock" id="lockTag">Plan locked</span>
+    <div class="right controls">
+      <button id="lockBtn">Lock plan</button>
+      <button id="expBtn">Export PowerPoint</button>
+    </div>
+    <div class="right"><button id="presBtn">Present mode</button></div>
+  </div>
+  <p id="msg"></p>
+  <div class="controls">
+    <div class="row"><span class="lb">Day type</span><button data-l="0">12 dry</button><button data-l="1">6 dry + 6 wet</button><button data-l="2">6 dry + 6 animal</button><button data-l="3">Shift day</button></div>
+    <div class="row" id="pmrow"><span class="lb">Period</span><button id="am">Morning</button><button id="pm">Afternoon</button></div>
+    <div class="row"><span class="lb">Page</span><button id="bu">Upper · 1–6</button><button id="bl">Lower · 7–12</button><button id="ba">All 12</button></div>
+  </div>
+  <div class="row" id="pageRow" style="display:none"><button id="bu2">Upper · 1–6</button><button id="bl2">Lower · 7–12</button><button id="ba2">All 12</button></div>
+  <div class="grid" id="g"></div>
+  <div class="lg">
+    <span><span class="sq" style="background:var(--text-accent)"></span>Male</span>
+    <span><span class="sq" style="background:var(--text-mag)"></span>Female</span>
+    <span><span class="sq" style="border:1px dashed var(--border-warn)"></span>Gender to confirm (tap ?)</span>
+    <span>Tap swap on two names to exchange them</span>
+    <span>Non-Egyptian candidates are placed in the animal group first</span>
+    <span>Pairs follow gender first, then country</span>
+  </div>
+</div>
+<script>
+/* SAMPLE DATA ONLY. The real app loads candidates from the API. [name, gender m|f|u, country code] */
+var C=[["Ahmed Hassan","m","EG"],["Mohamed Ali","m","EG"],["Sara Mostafa","f","EG"],["Mariam Adel","f","EG"],["Nour Salem","u","EG"],["Hala Fathy","f","EG"],["Dina Samir","f","EG"],["Reem Tarek","f","EG"],["Mahmoud Ezzat","m","EG"],["Amr Fawzy","m","EG"],["Tamer Gaber","m","EG"],["Hossam Rizk","m","EG"],["Omar Khaled","m","SA"],["Yousef Nasser","m","SA"],["Khaled Said","m","LY"],["Ibrahim Younis","m","LY"],["Salma Nabil","f","SD"],["Rana Hamdy","f","SD"],["Mostafa Idris","m","YE"],["Adam Kamal","m","YE"],["Farida Wael","f","EG"],["Laila Magdy","f","EG"],["Jana Osama","u","EG"],["Heba Zaki","f","EG"]];
+var L=2,pm=0,view=0,sel=-1,gq=-1,locked=false,present=false;
+var NM={d:["Dry","t-d"],w:["Wet","t-w"],a:["Animal","t-a"]};
+var SW='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10h13l-4-4M17 14H4l4 4"/></svg>';
+function $(i){return document.getElementById(i)}
+function tp(s){if(s<6)return 'd';return L==0?'d':(L==1?'w':'a')}
+function idx(s,k){var b=s*2+k;return (L==3&&pm)?(b+12)%24:b}
+function esc(x){var e=document.createElement('div');e.textContent=x;return e.innerHTML}
+function render(){
+  var h='',s0=view==2?0:view*6,cnt=view==2?12:6;
+  for(var i=0;i<cnt;i++){
+    var s=s0+i,t=tp(s),x='<div class="st"><p class="sn"><span>Station '+(s+1)+'</span><span class="tp '+NM[t][1]+'">'+NM[t][0]+'</span></p><svg viewBox="0 0 220 200" width="100%" role="img" aria-label="'+NM[t][0]+' lab station"><use href="#'+t+'"/></svg>';
+    for(var k=0;k<2;k++){
+      var j=idx(s,k),c=C[j],ctl='';
+      if(c[1]=='u'&&!locked&&gq!==j)ctl+='<button class="q" data-q="'+j+'" aria-label="Set gender for '+esc(c[0])+'">?</button>';
+      if(c[1]=='u'&&gq===j)ctl+='<button data-g="m" data-i="'+j+'">M</button><button data-g="f" data-i="'+j+'">F</button>';
+      if(!locked)ctl+='<button data-i="'+j+'" data-sw="1" aria-label="Swap '+esc(c[0])+'">'+SW+'</button>';
+      x+='<div class="nm '+c[1]+(sel===j?' sel':'')+'"><span class="n" dir="auto">'+esc(c[0])+'</span><span class="c">'+c[2]+'</span>'+ctl+'</div>';
+    }
+    h+=x+'</div>';
+  }
+  $('g').innerHTML=h;
+  $('bu').className=view==0?'on':'';$('bl').className=view==1?'on':'';$('ba').className=view==2?'on':'';
+  $('bu2').className=view==0?'on':'';$('bl2').className=view==1?'on':'';$('ba2').className=view==2?'on':'';
+  $('am').className=pm==0?'on':'';$('pm').className=pm==1?'on':'';
+  $('pmrow').style.display=L==3?'flex':'none';
+  document.querySelectorAll('[data-l]').forEach(function(b){b.className=(+b.dataset.l==L)?'on':''});
+  $('lockTag').style.display=locked?'inline-block':'none';
+  $('lockBtn').textContent=locked?'Unlock plan':'Lock plan';
+  $('pageRow').style.display=present?'flex':'none';
+  $('presBtn').textContent=present?'Exit Present mode':'Present mode';
+  document.body.className=present?'present':'';
+}
+function note(m){var e=$('msg');e.textContent=m;e.style.display='block'}
+$('g').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b||locked&&!b.dataset.q)return;
+  if(b.dataset.q){gq=+b.dataset.q;render();return}
+  if(b.dataset.g){C[+b.dataset.i][1]=b.dataset.g;gq=-1;render();return}
+  var i=+b.dataset.i;
+  if(sel<0){sel=i}else{if(sel!==i){var t=C[sel];C[sel]=C[i];C[i]=t}sel=-1}
+  render();
+});
+document.querySelectorAll('[data-l]').forEach(function(b){b.onclick=function(){L=+b.dataset.l;pm=0;sel=-1;render()}});
+$('am').onclick=function(){pm=0;sel=-1;render()};
+$('pm').onclick=function(){pm=1;sel=-1;render()};
+function pg(v){return function(){view=v;sel=-1;render()}}
+$('bu').onclick=pg(0);$('bl').onclick=pg(1);$('bu2').onclick=pg(0);$('bl2').onclick=pg(1);$('ba').onclick=pg(2);$('ba2').onclick=pg(2);
+$('lockBtn').onclick=function(){locked=!locked;sel=-1;gq=-1;render()};
+$('presBtn').onclick=function(){present=!present;sel=-1;gq=-1;render()};
+$('expBtn').onclick=function(){note('In the real app this creates a .pptx file of the final stations in your browser.')};
+render();
+</script>
+</body>
+</html>
