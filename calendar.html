@@ -63,7 +63,7 @@ button.yd{cursor:pointer;font-weight:500}
 .pd{margin:0 0 12px}
 .pd textarea{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
 </style>
-</head>
+<script src="js/config.js"></script><script src="js/api.js"></script><script src="js/session.js"></script></head>
 <body>
 <div class="wrap">
 <header class="top">
@@ -181,7 +181,7 @@ $('yr').addEventListener('click',function(e){var b=e.target.closest('.yd');if(b&
 $('vy').onclick=function(){view='year';rv()};$('vm').onclick=function(){view='month';rv()};
 $('pv').onclick=function(){mo--;cal()};$('nxb').onclick=function(){mo++;cal()};
 $('td').onclick=function(){mo=10;cal()};
-$('rh').onclick=function(){head=true;rv();dayp()};$('ri').onclick=function(){head=false;rv();dayp()};
+/* view-as removed */
 $('up').onclick=function(){$('fi').click()};
 $('fi').onchange=function(e){var f=e.target.files[0];if(f)$('un').textContent=f.name+' selected. In the real app the image is read and every detected course and date is shown for you to confirm before saving.'};
 $('lg').innerHTML=Object.keys(DEP).map(function(k){return '<span><span class="pl dep-'+k+'">'+DEP[k]+'</span></span>'}).join('');
@@ -226,3 +226,4 @@ next();rv();
 </script>
 </body>
 </html>
+
