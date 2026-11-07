@@ -259,7 +259,21 @@ $('rh').onclick=function(){rh0();syncAdd()};$('ri').onclick=function(){ri0();syn
 syncAdd();
 list();
 </script>
-<script>if(!session.requireAuth()){};</script></body>
+<script>if(!session.requireAuth()){};</script><script>
+document.getElementById('addp').addEventListener('click', async function(e){
+  var b = e.target.closest('#aps2'); if (!b) return;
+  // collect values
+  var serial = (document.getElementById('aps')||{}).value || AP.serial;
+  var date = (document.getElementById('apr')||{}).value || AP.date;
+  var typeCode = AP.type==='__new' ? (AP.l2||'').toUpperCase() : AP.type;
+  // new type handling: create type first? skip for now, use existing
+  try {
+    var r = await api('/api/tools', { method:'POST', body: JSON.stringify({ serial: serial, typeId: typeCode, status:'available', registeredAt: date }) });
+    console.log('tool saved', r);
+  } catch(err){ console.error('save tool failed', err); AP.err = err.message; }
+}, true);
+</script>
+</body>
 </html>
 
 
