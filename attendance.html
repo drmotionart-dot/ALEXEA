@@ -139,5 +139,31 @@ $('pd').onchange=function(e){PD=e.target.value;init();render()};
 $('rh').onclick=function(){head=true;sel=null;render()};$('ri').onclick=function(){head=false;sel=null;render()};
 init();render();
 </script>
+<script>
+(async function(){
+  try {
+    var cd = await api('/api/courses/current-day');
+    if (!cd.day) { document.getElementById('body') && (document.getElementById('body').innerHTML='<p class="empty">No course today.</p>'); return; }
+    var day = cd.day;
+    var users = await api('/api/users');
+    var att = await api('/api/attendance?courseDayId='+day._id);
+    var attMap = {}; (att.attendance||[]).forEach(function(a){ attMap[a.userId]=a; });
+    // override M
+    M = (users.users||[]).map(function(u){
+      var a = attMap[u.id];
+      return { n: u.name, h: u.role==='head'?1:0, s: a ? a.state.charAt(0) : '', t: a ? (a.checkedInAt||'') : '', g: '', id: u.id };
+    });
+    var cu = session.user();
+    if (cu) { var mi = M.findIndex(function(m){return m.n===cu.name}); if (mi>=0) me = mi; }
+    START = (day.rows&&day.rows.length)? day.rows[0].start : '09:00';
+    // override course info
+    var sub = document.getElementById('sub');
+    if (sub && cd.course) sub.textContent = cd.course.name + ' · day ' + day.index + ' · ' + day.date + ' · starts at ' + START;
+    // team assignments from day.team
+    M.forEach(function(m, idx){ /* map by name not id; skip team for now */ });
+    if (typeof render === 'function') render();
+  } catch(e){ console.error('attendance load failed', e); }
+})();
+</script>
 </body>
 </html>
