@@ -175,8 +175,7 @@ function yearView(){
   $('yr').innerHTML=h}
 function rv(){$('yr').style.display=view=='year'?'grid':'none';$('mwrap').style.display=view=='year'?'none':'block';
   $('vy').className=view=='year'?'on':'';$('vm').className=view=='year'?'':'on';
-  if(view=='year')yearView();else cal();
-  $('rh').className=head?'on':'';$('ri').className=head?'':'on'}
+  if(view=='year')yearView();else cal();}
 $('yr').addEventListener('click',function(e){var b=e.target.closest('.yd');if(b&&b.dataset.k){cur=b.dataset.k;mo=+cur.slice(5,7)-1;rv();dayp();$('day').scrollIntoView({block:'nearest',behavior:'smooth'})}});
 $('vy').onclick=function(){view='year';rv()};$('vm').onclick=function(){view='month';rv()};
 $('pv').onclick=function(){mo--;cal()};$('nxb').onclick=function(){mo++;cal()};
