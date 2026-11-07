@@ -82,6 +82,9 @@ h3.sh{font-size:13px;font-weight:500;margin:12px 0 4px}
 @media(min-width:1100px){.wrap{max-width:1280px}.grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}}
 </style>
 <link rel="stylesheet" href="topbar.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#003C7E">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
 <script src="js/config.js"></script><script src="js/api.js"></script><script src="js/session.js"></script></head>
 <body>
 <div class="wrap">
@@ -108,6 +111,7 @@ h3.sh{font-size:13px;font-weight:500;margin:12px 0 4px}
 <div class="grid" id="g"></div>
 <div class="lgd"><span>Lens codes</span><span><span class="dot" style="background:#1D9E75"></span>0° green</span><span><span class="dot" style="background:#E24B4A"></span>30° red</span><span><span class="dot" style="background:#1a1a1a;border:.5px solid var(--border-strong)"></span>Chameleon black</span></div>
 </div>
+<script src="install.js"></script>
 <script src="tool-drawings.js"></script>
 <script>
 /* SAMPLE DATA ONLY. Real data comes from the API (docs/DATA_MODEL.md).
@@ -136,7 +140,7 @@ var U=[
 {s:'ALX-LS-0002',t:'LS',st:'a',reg:'2025-01-20',last:'2026-06-25',loc:'',h:[['2026-06-25','Routine check','Firing mechanism ok']],c:[]},
 {s:'ALX-CS-0001',t:'CS',st:'a',reg:'2025-01-20',last:'2026-06-25',loc:'',h:[['2026-06-25','Routine check','Wing knob smooth']],c:[]}
 ];
-var TODAY='2026-11-06';
+var TODAY='2026-11-07';
 var cats=['All','Access','Optics','Hand instruments','Energy','Staplers','Gynecology and urology'],cat='All',head=true,sel=null,flt=false,sf2='all',q='',stream=null,tm=null;
 var SN={a:['Available','s-a'],u:['In use','s-u'],m:['Maintenance','s-m']};
 var PH='<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M4 17l5-4 4 3 3-2 4 3"/></svg>';
@@ -208,41 +212,46 @@ $('rh').onclick=function(){head=true;list();detail()};
 $('ri').onclick=function(){head=false;list();detail()};
 /* ===== Add tool (heads only): choose a preset category and type, serial is suggested, registration date, optional photo ===== */
 var CATS6=['Access','Optics','Hand instruments','Energy','Staplers','Gynecology and urology'];
-var AP={cat:'Access',type:'TR',serial:'',auto:true,date:TODAY,name:'',draw:'grasper',photo:null,err:''};
-function nextSerial(code){var mx=0;U.forEach(function(u){if(u.t==code){var n=+u.s.split('-')[2];if(n>mx)mx=n}});return 'ALX-'+code+'-'+('000'+(mx+1)).slice(-4)}
+var AP={cat:'Access',type:'TR',serial:'',auto:true,date:TODAY,name:'',l2:'',draw:'grasper',photo:null,err:''};
+function L2(k){return (T[k][3]||T[k][0].replace(/[^A-Za-z]/g,'').slice(0,2)).toUpperCase()}
+/* Tool code = first 2 letters of the tool name + its number among the same tools + registration date DDMMYY. The 5th grasper registered on 7 Nov 2026 is GR5071126. */
+function genCode(){var p=AP.type=='__new'?((AP.l2||AP.name).replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase()):L2(AP.type);if(p.length<2||!AP.date)return '';var n=U.filter(function(u){return L2(u.t)==p}).length+1,d=AP.date.split('-');return p+n+d[2]+d[1]+d[0].slice(2)}
 function typesIn(c){return Object.keys(T).filter(function(k){return T[k][1]==c})}
 function syncAdd(){$('addb').style.display=head?'inline-flex':'none';if(!head)$('addp').style.display='none'}
 function addPanel(){
   var el=$('addp'),ts=typesIn(AP.cat);if(AP.type!='__new'&&ts.indexOf(AP.type)<0)AP.type=ts[0]||'__new';
-  var code=AP.type=='__new'?'NEW':AP.type;if(AP.auto)AP.serial=AP.type=='__new'?'':nextSerial(code);
+  if(AP.auto)AP.serial=genCode();
   var dr=AP.type=='__new'?AP.draw:T[AP.type][2];
   el.innerHTML='<h3 class="sh" style="margin-top:0">Add a tool</h3><div class="f2">'
    +'<label>Category<select id="apc">'+CATS6.map(function(c){return '<option'+(c==AP.cat?' selected':'')+'>'+c+'</option>'}).join('')+'</select></label>'
    +'<label>Type<select id="apt">'+ts.map(function(k){return '<option value="'+k+'"'+(k==AP.type?' selected':'')+'>'+T[k][0]+'</option>'}).join('')+'<option value="__new"'+(AP.type=='__new'?' selected':'')+'>New type…</option></select></label>'
-   +(AP.type=='__new'?'<label>New type name<input id="apn" value="'+esc(AP.name)+'" placeholder="for example Claw grasper"></label><label>Closest drawing<select id="apd">'+TOOL_DRAWING_KEYS.map(function(k){return '<option'+(k==AP.draw?' selected':'')+'>'+k+'</option>'}).join('')+'</select></label>':'')
-   +'<label>Serial number<input id="aps" value="'+esc(AP.serial)+'" placeholder="ALX-GR-0016"></label>'
+   +(AP.type=='__new'?'<label>New type name<input id="apn" value="'+esc(AP.name)+'" placeholder="for example Claw grasper"></label><label>Code letters (2)<input id="apl" maxlength="2" value="'+esc(AP.l2||AP.name.replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase())+'"></label><label>Closest drawing<select id="apd">'+TOOL_DRAWING_KEYS.map(function(k){return '<option'+(k==AP.draw?' selected':'')+'>'+k+'</option>'}).join('')+'</select></label>':'')
+   +'<label>Tool code<input id="aps" value="'+esc(AP.serial)+'" placeholder="GR5071126"></label>'
    +'<label>Registration date<input id="apr" type="date" value="'+AP.date+'"></label>'
    +'<label>Photo (optional)<input id="app" type="file" accept="image/*" capture="environment"></label></div>'
    +'<div class="row" style="margin-top:10px"><div class="pv2" style="width:220px">'+(AP.photo?'<img src="'+AP.photo+'" alt="Photo preview" style="width:100%;border-radius:6px;display:block">':toolSvg(dr))+'</div></div>'
    +(AP.err?'<p class="er">'+AP.err+'</p>':'')
-   +'<div class="row"><button class="pri" id="aps2">Save tool</button><button id="apx">Cancel</button></div><p class="nt">The serial number is suggested from the type. Print its QR label from the tool page in the real app.</p>';
+   +'<div class="row"><button class="pri" id="aps2">Save tool</button><button id="apg">Generate code</button><button id="apx">Cancel</button></div><p class="nt">Code = first 2 letters of the tool name + its number among the same tools + registration date (DDMMYY). Example: the 5th grasper registered on 7 Nov 2026 is GR5071126. Print its QR label from the tool page in the real app.</p>';
   el.style.display='block'}
-$('addb').onclick=function(){AP={cat:'Access',type:'TR',serial:'',auto:true,date:TODAY,name:'',draw:'grasper',photo:null,err:''};$('dt').style.display='none';addPanel();$('addp').scrollIntoView({block:'nearest',behavior:'smooth'})};
+$('addb').onclick=function(){AP={cat:'Access',type:'TR',serial:'',auto:true,date:TODAY,name:'',l2:'',draw:'grasper',photo:null,err:''};$('dt').style.display='none';addPanel();$('addp').scrollIntoView({block:'nearest',behavior:'smooth'})};
 $('addp').addEventListener('change',function(e){var t=e.target;
   if(t.id=='apc'){AP.cat=t.value;AP.type=typesIn(AP.cat)[0]||'__new';AP.auto=true;AP.err='';addPanel()}
   else if(t.id=='apt'){AP.type=t.value;AP.auto=true;AP.err='';addPanel()}
   else if(t.id=='apd'){AP.draw=t.value;addPanel()}
+  else if(t.id=='apr'){AP.date=t.value;addPanel()}
+  else if(t.id=='apl'){AP.l2=t.value.toUpperCase();addPanel()}
   else if(t.id=='app'&&t.files[0]){AP.photo=URL.createObjectURL(t.files[0]);addPanel()}});
 $('addp').addEventListener('input',function(e){var t=e.target;if(t.id=='aps'){AP.serial=t.value;AP.auto=false}if(t.id=='apn')AP.name=t.value;if(t.id=='apr')AP.date=t.value});
 $('addp').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
   if(b.id=='apx'){$('addp').style.display='none';return}
+  if(b.id=='apg'){AP.auto=true;addPanel();return}
   if(b.id=='aps2'){var s=AP.serial.trim().toUpperCase(),code=AP.type;
     if(AP.type=='__new'){if(AP.name.trim().length<3){AP.err='Type a name for the new type (at least 3 letters).';return addPanel()}
       var w=AP.name.trim().toUpperCase().replace(/[^A-Z ]/g,'').split(' '),c=(w[0].charAt(0)+(w[1]?w[1].charAt(0):w[0].charAt(1))).toUpperCase(),n=0;while(T[c+(n||'')])n++;code=c+(n||'')}
-    if(!/^ALX-[A-Z0-9]{2,3}-\d{4}$/.test(s)){AP.err='The serial number should look like ALX-GR-0016.';return addPanel()}
-    if(find(s)){AP.err='That serial number is already registered.';return addPanel()}
+    if(!/^[A-Z]{2}\d{1,4}\d{6}$/.test(s)){AP.err='The code should look like GR5071126: 2 letters, a number, then the date (DDMMYY).';return addPanel()}
+    if(find(s)){AP.err='That code is already registered.';return addPanel()}
     if(!AP.date||AP.date>TODAY){AP.err='Choose a registration date that is not in the future.';return addPanel()}
-    if(AP.type=='__new')T[code]=[AP.name.trim(),AP.cat,AP.draw];
+    if(AP.type=='__new')T[code]=[AP.name.trim(),AP.cat,AP.draw,(AP.l2||AP.name).replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase()];
     U.push({s:s,t:code,st:'a',reg:AP.date,last:AP.date,loc:'',h:[[AP.date,'Registered','Added to the inventory']],c:[],photo:AP.photo||undefined});
     $('addp').style.display='none';reset();pick(s)}});
 var rh0=$('rh').onclick,ri0=$('ri').onclick;
@@ -250,25 +259,7 @@ $('rh').onclick=function(){rh0();syncAdd()};$('ri').onclick=function(){ri0();syn
 syncAdd();
 list();
 </script>
-<script>
-(async function(){
-  try {
-    var types = await api('/api/tools/types');
-    var newT = {};
-    (types.types||[]).forEach(function(t){ newT[t.code] = [t.name, t.category, t.drawing]; });
-    var newU = (tools.tools||[]).map(function(u){
-      var type = (types.types||[]).find(function(t){return t._id===u.typeId || t.code===u.typeId;});
-      var code = type ? type.code : u.typeId;
-      var st = u.status==='available'?'a':u.status==='inuse'?'u':'m';
-      return { s: u.serial, t: code, st: st, reg: (u.registeredAt||'').slice(0,10), last: u.lastMaintenanceAt?u.lastMaintenanceAt.slice(0,10):'', loc: (u.location&&u.location.note)||'', photo: u.photoUrl||'', h: (u.history||[]).map(function(h){return [h.date,h.kind,h.note];}), c: (u.comments||[]).map(function(c){return [c.by,c.date,c.text,c.needsRepair?1:0];}) };
-    });
-    T = newT;
-    U = newU;
-    if (typeof list === 'function') list();
-    if (typeof repairCount === 'function') {}
-  } catch(e){ console.error('tools load failed', e); }
-})();
-</script>
-</body>
+<script>if(!session.requireAuth()){};</script></body>
 </html>
+
 

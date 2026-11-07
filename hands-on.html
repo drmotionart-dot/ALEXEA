@@ -50,7 +50,7 @@ button.on{background:var(--surface-1);border-color:var(--border-stronger)}
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
 @media(max-width:640px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){.grid{grid-template-columns:minmax(0,1fr)}}
-@media(min-width:1100px){.wrap{max-width:1280px}.grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media(min-width:1100px){.wrap{max-width:1280px}.grid.all{grid-template-columns:repeat(6,minmax(0,1fr))}}
 .st{background:var(--surface-1);border:.5px solid var(--border);border-radius:12px;padding:8px 10px 10px}
 .sn{font-size:12px;color:var(--text-2);margin:0 0 2px;display:flex;justify-content:space-between;align-items:center}
 .tp{font-size:11px;padding:1px 8px;border-radius:var(--radius)}
@@ -79,6 +79,9 @@ body.present .sn{font-size:14px}
 body.present .tp{font-size:13px}
 </style>
 <link rel="stylesheet" href="topbar.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#003C7E">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
 <script src="js/config.js"></script><script src="js/api.js"></script><script src="js/session.js"></script></head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -158,6 +161,7 @@ body.present .tp{font-size:13px}
     <span>Pairs follow gender first, then country</span>
   </div>
 </div>
+<script src="install.js"></script>
 <script>
 /* SAMPLE DATA ONLY. The real app loads candidates from the API. [name, gender m|f|u, country code] */
 var C=[["Ahmed Hassan","m","EG"],["Mohamed Ali","m","EG"],["Sara Mostafa","f","EG"],["Mariam Adel","f","EG"],["Nour Salem","u","EG"],["Hala Fathy","f","EG"],["Dina Samir","f","EG"],["Reem Tarek","f","EG"],["Mahmoud Ezzat","m","EG"],["Amr Fawzy","m","EG"],["Tamer Gaber","m","EG"],["Hossam Rizk","m","EG"],["Omar Khaled","m","SA"],["Yousef Nasser","m","SA"],["Khaled Said","m","LY"],["Ibrahim Younis","m","LY"],["Salma Nabil","f","SD"],["Rana Hamdy","f","SD"],["Mostafa Idris","m","YE"],["Adam Kamal","m","YE"],["Farida Wael","f","EG"],["Laila Magdy","f","EG"],["Jana Osama","u","EG"],["Heba Zaki","f","EG"]];
@@ -181,7 +185,7 @@ function render(){
     }
     h+=x+'</div>';
   }
-  $('g').innerHTML=h;
+  $('g').innerHTML=h;$('g').className='grid'+(view==2?' all':'');
   $('bu').className=view==0?'on':'';$('bl').className=view==1?'on':'';$('ba').className=view==2?'on':'';
   $('bu2').className=view==0?'on':'';$('bl2').className=view==1?'on':'';$('ba2').className=view==2?'on':'';
   $('am').className=pm==0?'on':'';$('pm').className=pm==1?'on':'';
@@ -212,20 +216,7 @@ $('presBtn').onclick=function(){present=!present;sel=-1;gq=-1;render()};
 $('expBtn').onclick=function(){note('In the real app this creates a .pptx file of the final stations in your browser.')};
 render();
 </script>
-<script>
-(async function(){
-  try {
-    // find a course day
-    var cd = await api('/api/courses/current-day');
-    if (!cd.day) return;
-    var cands = await api('/api/candidates?courseId=' + (cd.course ? cd.course._id : cd.day.courseId));
-    if (cands.candidates && cands.candidates.length) {
-      C = cands.candidates.map(function(c){ return [c.nameEn||c.nameAr||'?', (c.gender||'u'), (c.countryId||'').slice(0,2).toUpperCase()]; });
-      render();
-    }
-  } catch(e){ console.error('hands-on load failed', e); }
-})();
-</script>
-</body>
+<script>if(!session.requireAuth()){};</script></body>
 </html>
+
 

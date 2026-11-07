@@ -3,9 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Account screens · ALEXEA</title>
+<title>Account screens · design source of truth</title>
 <link rel="stylesheet" href="shared.css">
-<link rel="stylesheet" href="topbar.css">
+<!--
+  DESIGN SOURCE OF TRUTH: log in, create account, waiting-for-approval, and the heads' approvals screen.
+  Match exactly. Do not restyle. Rules: sign-up creates a PENDING account; only ACTIVE users can log in;
+  heads approve or reject and can reset a member's password. Errors are inline, never popups.
+  The "Preview screen" row is preview-only. SAMPLE demo password for all sample users: demo1234
+-->
 <style>
 .card{max-width:420px;margin:0 auto 12px}
 .fld{display:block;margin:0 0 10px;font-size:13px;color:var(--text-2)}
@@ -20,97 +25,78 @@
 .tmp{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--bg-warn);color:var(--text-warn);border-radius:6px;padding:2px 8px;font-size:13px}
 .big{text-align:center;padding:18px 8px}
 .big .ic{width:44px;height:44px;border-radius:50%;background:var(--bg-warn);color:var(--text-warn);display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:8px}
-.bform{max-width:420px;margin:0 auto 12px;background:var(--surface-1);border:.5px solid var(--border);border-radius:16px;overflow:hidden}
-.bform .hero{border-radius:0;margin:0}
-.fbody{padding:14px 16px}
-.pend{text-align:center}
-.pend .ic{width:44px;height:44px;border-radius:50%;background:var(--bg-warn);color:var(--text-warn);display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:8px}
 </style>
-</head>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#003C7E">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<script src="js/config.js"></script><script src="js/api.js"></script><script src="js/session.js"></script></head>
 <body>
 <div class="wrap">
+<header class="top">
+  <a class="hl" href="home.html" aria-label="Home"><div class="logo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><span class="brand">ALEXEA Course Manager</span></a>
+  <nav class="nav"><a href="home.html">Home</a><a href="calendar.html">Calendar</a><a href="hands-on.html">Hands-on</a><a href="attendance.html">Attendance</a><a href="tools.html">Tools</a><a href="import.html">Candidates</a><a href="activity.html">Activity</a><a class="cur" href="accounts.html">Account</a></nav>
+</header>
+<div class="row"><span class="lb">Preview screen</span><button data-s="login">Log in</button><button data-s="signup">Create account</button><button data-s="pending">Waiting for approval</button><button data-s="approvals">Approvals (head)</button><button data-s="myacct">My account</button></div>
 <div id="v"></div>
 </div>
-<script src="js/config.js"></script>
-<script src="js/api.js"></script>
-<script src="js/session.js"></script>
+<script src="install.js"></script>
 <script>
-var showPw=false;
+/* SAMPLE users. Real users live in MongoDB (docs/DATA_MODEL.md). status: active|pending|rejected */
+var U=[{n:'Dr. Ahmed',u:'ahmed',r:'head',s:'active'},{n:'Dr. Sara',u:'sara',r:'member',s:'active'},{n:'Dr. Omar',u:'omar',r:'member',s:'active'},{n:'Dr. Mona',u:'mona',r:'member',s:'pending'},{n:'Dr. Karim',u:'karim',r:'member',s:'pending'},{n:'Dr. Hala',u:'hala',r:'member',s:'rejected'}];
+var scr='login',showPw=false,msg='',tmp={},signed=null,TP={},cu=null,cpmsg='';
 function $(i){return document.getElementById(i)}
+function ini(n){return n.replace(/^Dr\.\s*/,'').charAt(0)}
 function brand(t,s){return '<div class="hero"><div class="lgo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><h1>'+t+'</h1><p>'+s+'</p></div>'}
 function esc(x){var e=document.createElement('div');e.textContent=x;return e.innerHTML}
-function ini(n){return (n||'?').replace(/^Dr\.\s*/i,'').charAt(0).toUpperCase()}
 function pwField(id,label,ph){return '<label class="fld">'+label+'<div class="pw"><input id="'+id+'" type="'+(showPw?'text':'password')+'" placeholder="'+ph+'" autocomplete="off"><button type="button" data-pw="1">'+(showPw?'Hide':'Show')+'</button></div></label>'}
-function view(scr){
-  var h='',user=session.user();
+function view(){
+  var h='';
   if(scr=='login'){
-    h='<div class="bform">'+brand('Log in','Use the username your account was created with.')+'<div class="fbody"><label class="fld">Username<input id="lu" autocomplete="off" placeholder="for example sara"></label>'+pwField('lp','Password','Password')+'<p class="er" id="le" style="display:none"></p><div class="bar"><button class="pri" id="lgo">Log in</button><a class="btn" href="#" id="gosignup">Create account</a></div></div></div>';
-  } else if(scr=='signup'){
-    h='<div class="bform">'+brand('Create account','A head must approve your account before you can log in.')+'<div class="fbody"><label class="fld">Full name<input id="sn" dir="auto" placeholder="Dr. Name"></label><label class="fld">Username<input id="su" autocomplete="off" placeholder="at least 3 letters"></label>'+pwField('sp','Password','At least 8 characters')+pwField('sc','Confirm password','Repeat the password')+'<p class="er" id="se" style="display:none"></p><div class="bar"><button class="pri" id="sgo">Create account</button><a class="btn" href="#" id="gologin">I already have an account</a></div></div></div>';
-  } else if(scr=='pending'){
-    h='<div class="bform">'+brand('Waiting for approval','Your account was created.')+'<div class="fbody pend"><div class="ic">…</div><p class="sub">A head needs to approve it before you can log in. Ask one of them to open the Approvals screen.</p><a class="btn" href="#" id="gologin2">Back to log in</a></div></div>';
-  } else if(scr=='approvals' && session.isHead()){
-    loadApprovals();
-    return;
-  }
+    h='<div class="bform">'+brand('Log in','Use the username your account was created with.')+'<div class="fbody"><label class="fld">Username<input id="lu" autocomplete="off" placeholder="for example sara"></label>'+pwField('lp','Password','Password')+'<p class="er" id="le" style="display:none"></p>'+(signed?'<p class="ok">Signed in as '+esc(signed)+'.</p>':'')+'<div class="bar"><button class="pri" id="lgo">Log in</button><button data-s="signup">Create account</button></div><p class="nt" style="margin-top:12px">Forgot your password? Ask a head to reset it. They give you a temporary password, and you choose your own the next time you log in.</p></div></div>'}
+  else if(scr=='signup'){
+    h='<div class="bform">'+brand('Create account','A head must approve your account before you can log in.')+'<div class="fbody"><label class="fld">Full name<input id="sn" dir="auto" placeholder="Dr. Name"></label><label class="fld">Username<input id="su" autocomplete="off" placeholder="at least 3 letters"></label>'+pwField('sp','Password','At least 8 characters')+pwField('sc','Confirm password','Repeat the password')+'<p class="er" id="se" style="display:none"></p><div class="bar"><button class="pri" id="sgo">Create account</button><button data-s="login">I already have an account</button></div></div></div>'}
+  else if(scr=='pending'){
+    h='<div class="bform">'+brand('Waiting for approval','Your account was created.')+'<div class="fbody pend"><div class="ic">…</div><p class="sub">A head needs to approve it before you can log in. Ask one of them to open the Approvals screen.</p><button data-s="login">Back to log in</button></div></div>'}
+  else if(scr=='myacct'||scr=='change'){
+    var f=scr=='change',u0=cu||U[1];
+    h='<div class="bform">'+brand(f?'Choose a new password':'My account',f?'A head reset your password. Choose your own now.':'Signed in as '+esc(u0.n)+' · '+u0.r)+'<div class="fbody">'+(f?'':'<div class="ur" style="margin:0 0 12px"><span class="av">'+ini(u0.n)+'</span><span class="n" dir="auto">'+esc(u0.n)+(u0.r=='head'?' <span class="pl s-acc">head</span>':'')+'</span><span class="u">'+u0.u+'</span></div>')+'<h3 class="sh" style="margin-top:0">'+(f?'New password':'Change password')+'</h3>'+(f?'':pwField('cp0','Current password','Your current password'))+pwField('cp1','New password','At least 8 characters')+pwField('cp2','Confirm new password','Repeat the new password')+'<p class="er" id="cpe" style="display:none"></p>'+(cpmsg?'<p class="ok">'+cpmsg+'</p>':'')+'<div class="bar"><button class="pri" id="cgo">'+(f?'Save new password':'Change password')+'</button>'+(f?'':'<button data-s="login">Log out</button>')+'</div>'+(f?'':'<h3 class="sh">Use it like an app</h3><div class="bar" style="margin-top:0"><button id="inst2">Install app on this phone</button></div><div class="ip" id="ip2" style="display:none;margin-top:8px"></div>')+'</div></div>';cpmsg=''}
+  else{
+    var pend=U.filter(function(x){return x.s=='pending'}),act=U.filter(function(x){return x.s=='active'});
+    h='<div class="hero"><h1>Approvals</h1><p>Only heads can see this screen.</p></div><div class="cnt"><div class="c"><b>'+pend.length+'</b><span>Waiting</span></div><div class="c"><b>'+act.length+'</b><span>Active members</span></div></div><h3 class="sh">Waiting for approval ('+pend.length+')</h3>'+(pend.length?pend.map(function(x){var i=U.indexOf(x);return '<div class="ur"><span class="av">'+ini(x.n)+'</span><span class="n" dir="auto">'+esc(x.n)+'</span><span class="u">'+x.u+'</span><button class="pri" data-ap="'+i+'">Approve</button><button data-rj="'+i+'">Reject</button></div>'}).join(''):'<p class="empty">Nobody is waiting.</p>')+(msg?'<p class="ok">'+msg+'</p>':'')+'<h3 class="sh">Team ('+act.length+')</h3>'+act.map(function(x){var i=U.indexOf(x);return '<div class="ur"><span class="av">'+ini(x.n)+'</span><span class="n" dir="auto">'+esc(x.n)+(x.r=='head'?' <span class="pl s-acc">head</span>':'')+'</span><span class="u">'+x.u+'</span>'+(tmp[i]?'<span class="nt">New password: <span class="tmp">'+tmp[i]+'</span> shown once</span>':'')+(x.r=='head'?'':'<button data-rs="'+i+'">Reset password</button>')+'</div>'}).join('')}
   $('v').innerHTML=h;
-  wire(scr);
-}
-function err(id,t){var e=$(id);if(e){e.textContent=t;e.style.display='block'}}
-function wire(scr){
-  if(scr=='login'){
-    $('lgo').onclick=async function(){
-      var u=$('lu').value.trim().toLowerCase(),p=$('lp').value;
-      if(!u||!p)return err('le','Enter your username and password.');
-      try{await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:u,password:p})}).then(function(d){
-        localStorage.setItem('token',d.token);localStorage.setItem('user',JSON.stringify(d.user));
-        var next=new URLSearchParams(location.search).get('next');
-        location.href=next?decodeURIComponent(next):'home.html';
-      });}catch(e){err('le',e.message)}
-    };
-    var gs=$('gosignup'); if(gs) gs.onclick=function(e){e.preventDefault();view('signup')};
-  } else if(scr=='signup'){
-    $('sgo').onclick=async function(){
-      var n=$('sn').value.trim(),u=$('su').value.trim().toLowerCase(),p1=$('sp').value,p2=$('sc').value;
-      if(!n)return err('se','Enter your full name.');
-      if(u.length<3)return err('se','Username needs at least 3 letters.');
-      if(p1.length<8)return err('se','Password needs at least 8 characters.');
-      if(p1!=p2)return err('se','The two passwords do not match.');
-      try{await api('/api/auth/signup',{method:'POST',body:JSON.stringify({name:n,username:u,password:p1})});view('pending');}
-      catch(e){err('se',e.message)}
-    };
-    var gl=$('gologin'); if(gl) gl.onclick=function(e){e.preventDefault();view('login')};
-  } else if(scr=='pending'){
-    var gl2=$('gologin2'); if(gl2) gl2.onclick=function(e){e.preventDefault();view('login')};
-  }
-  document.querySelectorAll('[data-pw]').forEach(function(b){b.onclick=function(){
-    showPw=!showPw;view(scr);
-  }});
-}
-async function loadApprovals(){
-  var pending=await api('/api/users/pending').catch(function(){return {users:[]}}).then(function(d){return d.users||[]});
-  var active=await api('/api/users').catch(function(){return {users:[]}}).then(function(d){return d.users||[]});
-  var h='<div class="hero"><h1>Approvals</h1><p>Only heads can see this screen.</p></div><div class="cnt"><div class="c"><b>'+pending.length+'</b><span>Waiting</span></div><div class="c"><b>'+active.length+'</b><span>Active members</span></div></div><h3 class="sh">Waiting for approval ('+pending.length+')</h3>';
-  if(!pending.length)h+='<p class="empty">Nobody is waiting.</p>';
-  else pending.forEach(function(x){
-    h+='<div class="ur"><span class="av">'+ini(x.name)+'</span><span class="n" dir="auto">'+esc(x.name)+'</span><span class="u">'+x.username+'</span><button class="pri" data-ap="'+x.id+'">Approve</button><button data-rj="'+x.id+'">Reject</button></div>';
-  });
-  h+='<h3 class="sh">Team ('+active.length+')</h3>';
-  active.forEach(function(x){
-    h+='<div class="ur"><span class="av">'+ini(x.name)+'</span><span class="n" dir="auto">'+esc(x.name)+(x.role=='head'?' <span class="pl s-acc">head</span>':'')+'</span><span class="u">'+x.username+'</span>'+(x.role!='head'?'<button data-rs="'+x.id+'">Reset password</button>':'')+'</div>';
-  });
-  $('v').innerHTML=h;
-  $('v').addEventListener('click',async function(e){
-    var b=e.target.closest('button');if(!b)return;
-    if(b.dataset.ap){await api('/api/users/'+b.dataset.ap+'/approve',{method:'POST'});loadApprovals();}
-    else if(b.dataset.rj){await api('/api/users/'+b.dataset.rj+'/reject',{method:'POST'});loadApprovals();}
-    else if(b.dataset.rs){var t='';for(var i=0;i<8;i++)t+='abcdefghjkmnpqrstuvwxyz23456789'.charAt(Math.floor(Math.random()*31));await api('/api/users/'+b.dataset.rs+'/reset-password',{method:'POST',body:JSON.stringify({password:t})});alert('New password: '+t+' (shown once)');loadApprovals();}
-  });
-}
-var u=session.user();
-if(u && u.role==='head'){view('approvals');}
-else if(u){$('v').innerHTML='<div class="hero"><h1>My account</h1><p>'+esc(u.name)+' · '+u.role+'</p></div><div class="bar"><button id="lo" class="pri">Log out</button></div>';document.getElementById('lo').onclick=session.logout;}
-else {view('login');}
+  if($('inst2'))ALX_install($('inst2'),$('ip2'));
+  document.querySelectorAll('[data-s]').forEach(function(b){if(b.parentNode.className.indexOf('row')>-1)b.className=b.dataset.s==scr?'on':''})}
+function err(id,t){var e=$(id);e.textContent=t;e.style.display='block'}
+$('v').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+  if(b.dataset.s){scr=b.dataset.s;signed=null;view();return}
+  if(b.dataset.pw){var ids=['lp','sp','sc','cp0','cp1','cp2'],val={};ids.forEach(function(i){if($(i))val[i]=$(i).value});showPw=!showPw;view();for(var k in val)$(k).value=val[k];return}
+  if(b.id=='lgo'){var u=$('lu').value.trim().toLowerCase(),p=$('lp').value,x=U.filter(function(z){return z.u==u})[0];
+    if(!u||!p)return err('le','Enter your username and password.');
+    if(!x||(p!='demo1234'&&p!=TP[x.u]))return err('le','Wrong username or password.');
+    if(x.s=='pending')return err('le','Your account is waiting for a head to approve it.');
+    if(x.s=='rejected')return err('le','Your account request was not approved. Ask a head.');
+    cu=x;if(TP[x.u]&&p==TP[x.u]){scr='change';view();return}
+    signed=x.n+' ('+x.r+')';view();return}
+  if(b.id=='sgo'){var n=$('sn').value.trim(),u2=$('su').value.trim().toLowerCase(),p1=$('sp').value,p2=$('sc').value;
+    if(!n)return err('se','Enter your full name.');
+    if(u2.length<3)return err('se','Username needs at least 3 letters.');
+    if(U.some(function(z){return z.u==u2}))return err('se','That username is taken. Try another.');
+    if(p1.length<8)return err('se','Password needs at least 8 characters.');
+    if(p1!=p2)return err('se','The two passwords do not match.');
+    U.push({n:n,u:u2,r:'member',s:'pending'});scr='pending';view();return}
+  if(b.dataset.ap){var x1=U[+b.dataset.ap];x1.s='active';msg=x1.n+' approved. They can log in now.';view();return}
+  if(b.dataset.rj){var x2=U[+b.dataset.rj];x2.s='rejected';msg=x2.n+' rejected.';view();return}
+  if(b.dataset.rs){var t='';for(var i=0;i<8;i++)t+='abcdefghjkmnpqrstuvwxyz23456789'.charAt(Math.floor(Math.random()*31));tmp[b.dataset.rs]=t;TP[U[+b.dataset.rs].u]=t;msg='';view();return}
+  if(b.id=='cgo'){var f2=scr=='change',u1=cu||U[1],c0=f2?null:$('cp0').value,n1=$('cp1').value,n2=$('cp2').value;
+    if(!f2&&c0!='demo1234'&&c0!=TP[u1.u])return err('cpe','Your current password is wrong.');
+    if(n1.length<8)return err('cpe','The new password needs at least 8 characters.');
+    if(!f2&&n1==c0)return err('cpe','Choose a password different from the current one.');
+    if(n1!=n2)return err('cpe','The two passwords do not match.');
+    delete TP[u1.u];cpmsg=f2?'Password saved. You are signed in.':'Password changed.';scr='myacct';view()}
+});
+document.querySelector('.row').addEventListener('click',function(e){var b=e.target.closest('button');if(b&&b.dataset.s){scr=b.dataset.s;signed=null;msg='';view()}});
+view();
 </script>
 </body>
 </html>
+

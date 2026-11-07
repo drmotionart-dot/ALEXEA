@@ -31,6 +31,9 @@ a.ev:hover{border-color:var(--border-stronger)}
 .k-cal{background:var(--bg-aqua);color:var(--text-aqua)}
 .none{text-align:center;padding:24px 12px}
 </style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#003C7E">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
 <script src="js/config.js"></script><script src="js/api.js"></script><script src="js/session.js"></script></head>
 <body>
 <div class="wrap">
@@ -42,6 +45,7 @@ a.ev:hover{border-color:var(--border-stronger)}
 <div class="row"><span class="lb">View as</span><button id="rh">Head</button><button id="ri">Member</button></div>
 <div id="body"></div>
 </div>
+<script src="install.js"></script>
 <script>
 var head=true,kind='all',who='all',shown=10,TODAY='2026-11-06';
 /* SAMPLE entries: [date, time, person, kind, text, link] */
@@ -86,11 +90,7 @@ $('body').addEventListener('change',function(e){if(e.target.id=='wh'){who=e.targ
 $('rh').onclick=function(){head=true;render()};$('ri').onclick=function(){head=false;render()};
 render();
 </script>
-<script>
-if (!session.isHead()) {
-  document.getElementById('body').innerHTML = '<div class="none"><p class="er">Only heads can see this page.</p></div>';
-}
-</script>
-</body>
+<script>if(!session.requireAuth()){};</script></body>
 </html>
+
 

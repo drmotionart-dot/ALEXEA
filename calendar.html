@@ -63,6 +63,9 @@ button.yd{cursor:pointer;font-weight:500}
 .pd{margin:0 0 12px}
 .pd textarea{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
 </style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#003C7E">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
 <script src="js/config.js"></script><script src="js/api.js"></script><script src="js/session.js"></script></head>
 <body>
 <div class="wrap">
@@ -71,7 +74,7 @@ button.yd{cursor:pointer;font-weight:500}
   <nav class="nav"><a href="home.html">Home</a><a class="cur" href="calendar.html">Calendar</a><a href="hands-on.html">Hands-on</a><a href="attendance.html">Attendance</a><a href="tools.html">Tools</a><a href="import.html">Candidates</a><a href="activity.html">Activity</a><a href="accounts.html">Account</a></nav>
 </header>
 <div class="hero"><h1>Course calendar 2026</h1><p style="margin-bottom:10px">Tap a course day to see its timetable, team and tools.</p><div id="nx"></div></div>
-<div class="row"><span class="lb">View</span><button id="vy">Year</button><button id="vm">Month</button><!-- view-as removed --></div>
+<div class="row"><span class="lb">View</span><button id="vy">Year</button><button id="vm">Month</button><span class="lb" style="margin-left:14px;min-width:0">View as</span><button id="rh">Head</button><button id="ri">Member</button></div>
 <div id="yr" class="yr"></div>
 <div id="mwrap" style="display:none"><div class="mh"><button id="pv" aria-label="Previous month">‹</button><span class="m" id="mt"></span><button id="td">Today</button><button id="nxb" aria-label="Next month">›</button></div>
 <div class="cal" id="cal"></div></div>
@@ -83,8 +86,9 @@ button.yd{cursor:pointer;font-weight:500}
   <div class="row" style="margin:0"><button id="up">Update from a calendar image</button><input type="file" id="fi" accept="image/*" style="display:none"><span class="nt" id="un">For next year: upload the new calendar image, then confirm each detected course and date.</span></div>
 </div>
 </div>
+<script src="install.js"></script>
 <script>
-var TODAY='2026-11-06',head=true,cur=null,mo=10;
+var TODAY='2026-11-07',head=true,cur=null,mo=10;
 var DEP={gen:'General surgery',gyn:'Gynecology',endo:'Endoscopic surgery',brs:'Breast surgery',ped:'Pediatric surgery',uro:'Urological surgery'};
 /* REAL 2026 DATA from the printed calendar: [department, name, start, end, closed(private)] */
 var CS=[
@@ -175,12 +179,13 @@ function yearView(){
   $('yr').innerHTML=h}
 function rv(){$('yr').style.display=view=='year'?'grid':'none';$('mwrap').style.display=view=='year'?'none':'block';
   $('vy').className=view=='year'?'on':'';$('vm').className=view=='year'?'':'on';
-  if(view=='year')yearView();else cal();}
+  if(view=='year')yearView();else cal();
+  $('rh').className=head?'on':'';$('ri').className=head?'':'on'}
 $('yr').addEventListener('click',function(e){var b=e.target.closest('.yd');if(b&&b.dataset.k){cur=b.dataset.k;mo=+cur.slice(5,7)-1;rv();dayp();$('day').scrollIntoView({block:'nearest',behavior:'smooth'})}});
 $('vy').onclick=function(){view='year';rv()};$('vm').onclick=function(){view='month';rv()};
 $('pv').onclick=function(){mo--;cal()};$('nxb').onclick=function(){mo++;cal()};
 $('td').onclick=function(){mo=10;cal()};
-/* view-as removed */
+$('rh').onclick=function(){head=true;rv();dayp()};$('ri').onclick=function(){head=false;rv();dayp()};
 $('up').onclick=function(){$('fi').click()};
 $('fi').onchange=function(e){var f=e.target.files[0];if(f)$('un').textContent=f.name+' selected. In the real app the image is read and every detected course and date is shown for you to confirm before saving.'};
 $('lg').innerHTML=Object.keys(DEP).map(function(k){return '<span><span class="pl dep-'+k+'">'+DEP[k]+'</span></span>'}).join('');
@@ -208,21 +213,7 @@ $('prog').addEventListener('click',function(e){var b=e.target.closest('button');
 $('prog').addEventListener('change',function(e){if(e.target.id=='pf'&&e.target.files[0]){pfile=e.target.files[0].name;$('pn').textContent=pfile;var er=$('pe');if(er)er.style.display='none'}});
 next();rv();
 </script>
-<script>
-(async function(){
-  try {
-    var d = await api('/api/courses');
-    var courses = d.courses || [];
-    // map to CS format: [dept, name, start, end, closed]
-    window.CS = courses.map(function(c){ return [c.dept||c.color, c.name, c.startDate, c.endDate, c.closed?1:0]; });
-    // override global CS
-    if (typeof CS !== 'undefined') { CS = window.CS; }
-    if (typeof yearView === 'function') yearView();
-    if (typeof cal === 'function') cal();
-    if (typeof next === 'function') next();
-  } catch(e) { console.error('calendar load failed', e); }
-})();
-</script>
-</body>
+<script>if(!session.requireAuth()){};</script></body>
 </html>
+
 
