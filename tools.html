@@ -250,5 +250,24 @@ $('rh').onclick=function(){rh0();syncAdd()};$('ri').onclick=function(){ri0();syn
 syncAdd();
 list();
 </script>
+<script>
+(async function(){
+  try {
+    var types = await api('/api/tools/types');
+    var newT = {};
+    (types.types||[]).forEach(function(t){ newT[t.code] = [t.name, t.category, t.drawing]; });
+    var newU = (tools.tools||[]).map(function(u){
+      var type = (types.types||[]).find(function(t){return t._id===u.typeId || t.code===u.typeId;});
+      var code = type ? type.code : u.typeId;
+      var st = u.status==='available'?'a':u.status==='inuse'?'u':'m';
+      return { s: u.serial, t: code, st: st, reg: (u.registeredAt||'').slice(0,10), last: u.lastMaintenanceAt?u.lastMaintenanceAt.slice(0,10):'', loc: (u.location&&u.location.note)||'', photo: u.photoUrl||'', h: (u.history||[]).map(function(h){return [h.date,h.kind,h.note];}), c: (u.comments||[]).map(function(c){return [c.by,c.date,c.text,c.needsRepair?1:0];}) };
+    });
+    T = newT;
+    U = newU;
+    if (typeof list === 'function') list();
+    if (typeof repairCount === 'function') {}
+  } catch(e){ console.error('tools load failed', e); }
+})();
+</script>
 </body>
 </html>

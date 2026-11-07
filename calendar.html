@@ -71,7 +71,7 @@ button.yd{cursor:pointer;font-weight:500}
   <nav class="nav"><a href="home.html">Home</a><a class="cur" href="calendar.html">Calendar</a><a href="hands-on.html">Hands-on</a><a href="attendance.html">Attendance</a><a href="tools.html">Tools</a><a href="import.html">Candidates</a><a href="activity.html">Activity</a><a href="accounts.html">Account</a></nav>
 </header>
 <div class="hero"><h1>Course calendar 2026</h1><p style="margin-bottom:10px">Tap a course day to see its timetable, team and tools.</p><div id="nx"></div></div>
-<div class="row"><span class="lb">View</span><button id="vy">Year</button><button id="vm">Month</button><span class="lb" style="margin-left:14px;min-width:0">View as</span><button id="rh">Head</button><button id="ri">Member</button></div>
+<div class="row"><span class="lb">View</span><button id="vy">Year</button><button id="vm">Month</button><!-- view-as removed --></div>
 <div id="yr" class="yr"></div>
 <div id="mwrap" style="display:none"><div class="mh"><button id="pv" aria-label="Previous month">‹</button><span class="m" id="mt"></span><button id="td">Today</button><button id="nxb" aria-label="Next month">›</button></div>
 <div class="cal" id="cal"></div></div>
@@ -208,6 +208,21 @@ $('prog').addEventListener('click',function(e){var b=e.target.closest('button');
   if(b.id=='ps'){document.querySelectorAll('[data-pr]').forEach(function(t){var k=t.dataset.pr,ty=document.querySelector('[data-pt="'+k+'"]').value;OVD[k]={t:ty,r:ptx(t.value,ty)}});pkOn=true;rv();dayp()}});
 $('prog').addEventListener('change',function(e){if(e.target.id=='pf'&&e.target.files[0]){pfile=e.target.files[0].name;$('pn').textContent=pfile;var er=$('pe');if(er)er.style.display='none'}});
 next();rv();
+</script>
+<script>
+(async function(){
+  try {
+    var d = await api('/api/courses');
+    var courses = d.courses || [];
+    // map to CS format: [dept, name, start, end, closed]
+    window.CS = courses.map(function(c){ return [c.dept||c.color, c.name, c.startDate, c.endDate, c.closed?1:0]; });
+    // override global CS
+    if (typeof CS !== 'undefined') { CS = window.CS; }
+    if (typeof yearView === 'function') yearView();
+    if (typeof cal === 'function') cal();
+    if (typeof next === 'function') next();
+  } catch(e) { console.error('calendar load failed', e); }
+})();
 </script>
 </body>
 </html>
