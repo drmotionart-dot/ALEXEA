@@ -213,7 +213,28 @@ $('prog').addEventListener('click',function(e){var b=e.target.closest('button');
 $('prog').addEventListener('change',function(e){if(e.target.id=='pf'&&e.target.files[0]){pfile=e.target.files[0].name;$('pn').textContent=pfile;var er=$('pe');if(er)er.style.display='none'}});
 next();rv();
 </script>
-<script>if(!session.requireAuth()){};</script></body>
+<script>if(!session.requireAuth()){};</script><script>
+document.addEventListener('click', async function(e){
+  var b = e.target.closest('#pa'); if(!b) return;
+  var fi = document.getElementById('pf'); if(!fi || !fi.files || !fi.files[0]) return;
+  e.preventDefault(); e.stopPropagation();
+  var f = fi.files[0];
+  var reader = new FileReader();
+  reader.onload = async function(){
+    var base64 = reader.result;
+    var type = f.type === 'application/pdf' ? 'pdf' : 'image';
+    try {
+      var r = await api('/api/analyze', { method:'POST', body: JSON.stringify({ file: base64, type: type }) });
+      // fill the textarea with extracted text
+      var ta = document.querySelector('[data-pr]');
+      if (ta) ta.value = r.text || '';
+      var pe = document.getElementById('pe'); if (pe){ pe.textContent = 'Analyzed: ' + (r.pages||0) + ' pages. Review below.'; pe.style.display='block'; }
+    } catch(err){ var pe2 = document.getElementById('pe'); if (pe2){ pe2.textContent = err.message; pe2.style.display='block'; } }
+  };
+  reader.readAsDataURL(f);
+}, true);
+</script>
+</body>
 </html>
 
 
