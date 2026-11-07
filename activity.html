@@ -86,5 +86,10 @@ $('body').addEventListener('change',function(e){if(e.target.id=='wh'){who=e.targ
 $('rh').onclick=function(){head=true;render()};$('ri').onclick=function(){head=false;render()};
 render();
 </script>
+<script>
+if (!session.isHead()) {
+  document.getElementById('body').innerHTML = '<div class="none"><p class="er">Only heads can see this page.</p></div>';
+}
+</script>
 </body>
 </html>
