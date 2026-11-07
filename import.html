@@ -110,5 +110,27 @@ $('s2').addEventListener('change',function(e){var t=e.target;
   if(t.dataset.nm)rows[+t.dataset.nm].name=t.value;if(t.dataset.ex)rows[+t.dataset.ex].exp=t.value});
 input();
 </script>
+<script>
+(async function(){
+  // ensure course selected
+  var courses = await api('/api/courses').catch(function(){return {courses:[]};});
+  var courseId = courses.courses && courses.courses.length ? courses.courses[0]._id : '';
+  // hook confirm button
+  document.addEventListener('click', async function(e){
+    var b = e.target.closest('#cf');
+    if (!b) return;
+    e.preventDefault();
+    e.stopPropagation();
+    // collect rows from global rows if available
+    var items = (window.rows||[]).map(function(r){
+      return { courseId: courseId, nameEn: r[0]||'', gender: r[1]||'u', countryId: r[2]||'', cityId: r[3]||'', hospitalId: r[4]||'', experienceYears: Number(r[5])||0, isEgyptian: /egypt/i.test(r[2]||'') };
+    });
+    try {
+      await api('/api/candidates/bulk', { method:'POST', body: JSON.stringify({ items: items }) });
+      var cs = document.getElementById('cs'); if (cs){ cs.textContent='Saved.'; cs.style.display='block'; }
+    } catch(err){ var ce=document.getElementById('ce'); if(ce){ ce.textContent=err.message; ce.style.display='block'; } }
+  }, true);
+})();
+</script>
 </body>
 </html>

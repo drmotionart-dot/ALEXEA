@@ -212,5 +212,19 @@ $('presBtn').onclick=function(){present=!present;sel=-1;gq=-1;render()};
 $('expBtn').onclick=function(){note('In the real app this creates a .pptx file of the final stations in your browser.')};
 render();
 </script>
+<script>
+(async function(){
+  try {
+    // find a course day
+    var cd = await api('/api/courses/current-day');
+    if (!cd.day) return;
+    var cands = await api('/api/candidates?courseId=' + (cd.course ? cd.course._id : cd.day.courseId));
+    if (cands.candidates && cands.candidates.length) {
+      C = cands.candidates.map(function(c){ return [c.nameEn||c.nameAr||'?', (c.gender||'u'), (c.countryId||'').slice(0,2).toUpperCase()]; });
+      render();
+    }
+  } catch(e){ console.error('hands-on load failed', e); }
+})();
+</script>
 </body>
 </html>
