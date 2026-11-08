@@ -97,7 +97,7 @@ $('v').addEventListener('click',function(e){var b=e.target.closest('button');if(
 document.querySelector('.row').addEventListener('click',function(e){var b=e.target.closest('button');if(b&&b.dataset.s){scr=b.dataset.s;signed=null;msg='';view()}});
 view();
 </script>
-<script>if(location.pathname!=="accounts.html"&&!session.requireAuth()){};</script><script>
+<script>
 // Wire real auth on top of the design's UI
 document.addEventListener('click', async function(e){
   var b = e.target.closest('button'); if(!b) return;
@@ -177,5 +177,7 @@ document.addEventListener('click', async function(e){
 </script>
 </body>
 </html>
+
+
 
 
