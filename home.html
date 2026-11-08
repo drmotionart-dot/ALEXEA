@@ -107,7 +107,7 @@ function cards(){
   else c.push({h:'accounts.html',t:'My account',s:'Dr. Sara · member · change password',a:myArt(),k:'c-acc'});
   $('hg').innerHTML=c.map(function(x){
     return '<a class="hc '+x.k+'" href="'+x.h+'"><div class="hi">'+x.a+'</div>'+(x.b?'<span class="bd pl '+x.b[1]+'">'+x.b[0]+'</span>':'')+'<div class="hb"><p class="t">'+x.t+'<span class="go">Open ›</span></p><p class="s">'+x.s+'</p></div></a>'}).join('');
-  $('rh').className=head?'on':'';$('ri').className=head?'':'on';
+  /* view-as removed */
   $('who').textContent=head?'Dr. Ahmed · head':'Dr. Sara · member';
   $('hi').textContent='Welcome, '+(head?'Dr. Ahmed':'Dr. Sara')}
 $('out').onclick=function(){session.logout()};
