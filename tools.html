@@ -164,7 +164,7 @@ function list(){
   $('ct').innerHTML='<span class="lb">Type</span>'+cats.map(function(c){return '<button data-c="'+c+'" class="'+(c==cat?'on':'')+'">'+c+'</button>'}).join('');
   var sfs=[['all','All'],['u','In use'],['a','Available'],['m','Maintenance']];
   $('sfr').innerHTML='<span class="lb">Status</span>'+sfs.map(function(x){return '<button data-f="'+x[0]+'" class="'+(sf2==x[0]?'on':'')+'">'+x[1]+'</button>'}).join('');
-  $('rh').className=head?'on':'';$('ri').className=head?'':'on';
+  /* view-as removed */
 }
 function detail(){
   var el=$('dt');if(!sel){el.style.display='none';return}

@@ -73,7 +73,7 @@ function $(i){return document.getElementById(i)}
 function fd(k){var d=new Date(k+'T00:00:00Z');if(k==TODAY)return 'Today';if(k=='2026-11-05')return 'Yesterday';return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getUTCDay()]+' '+d.getUTCDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()]}
 function match(e){var k=e[3]=='repair'?'tool':e[3];return (kind=='all'||k==kind)&&(who=='all'||e[2]==who)}
 function render(){
-  $('rh').className=head?'on':'';$('ri').className=head?'':'on';
+  /* view-as removed */
   if(!head){$('body').innerHTML='<div class="box none"><h3 class="sh" style="margin-top:0">Only heads can see this page</h3><p class="nt">Ask a head if you need to know what happened.</p><a class="btn" href="home.html" style="margin-top:10px">Back to Home</a></div>';return}
   var people=[];E.forEach(function(e){if(people.indexOf(e[2])<0)people.push(e[2])});
   var td=E.filter(function(e){return e[0]==TODAY}).length,rp=E.filter(function(e){return e[3]=='repair'}).length,ck=E.filter(function(e){return e[0]==TODAY&&e[3]=='checkin'}).length;
