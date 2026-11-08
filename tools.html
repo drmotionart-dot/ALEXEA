@@ -233,7 +233,7 @@ function addPanel(){
    +'<label>Photo (optional)<input id="app" type="file" accept="image/*" capture="environment"></label></div>'
    +'<div class="row" style="margin-top:10px"><div class="pv2" style="width:220px">'+(AP.photo?'<img src="'+AP.photo+'" alt="Photo preview" style="width:100%;border-radius:6px;display:block">':toolSvg(dr))+'</div></div>'
    +(AP.err?'<p class="er">'+AP.err+'</p>':'')
-   +'<div class="row"><button class="pri" id="aps2">Save tool</button><button id="apg">Generate code</button><button id="apx">Cancel</button></div><p class="nt">Code = first 2 letters of the tool name + its number among the same tools + registration date (DDMMYY). Example: the 5th grasper registered on 7 Nov 2026 is GR5071126. Print its QR label from the tool page in the real app.</p>';
+   +'<div class="row"><button class="pri" id="aps2">Save tool</button><button id="apg">Generate code</button><button id="apx">Cancel</button></div>';
   el.style.display='block'}
 $('addb').onclick=function(){AP={cat:'Access',type:'TR',serial:'',auto:true,date:TODAY,name:'',l2:'',draw:'grasper',photo:null,err:''};$('dt').style.display='none';addPanel();$('addp').scrollIntoView({block:'nearest',behavior:'smooth'})};
 $('addp').addEventListener('change',function(e){var t=e.target;
