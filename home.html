@@ -65,7 +65,7 @@
 <script src="station-sprite.js"></script>
 <script src="install.js"></script>
 <script>
-var head=true;
+var head=session.isHead();
 /* SAMPLE summaries. In the real app these come from the API. */
 var S={cal:'Next: Basic Laparoscopic Surgery · tomorrow',hands:'Day 1 tomorrow · 12 dry stations · 24 candidates',att:'5 of 8 on site · 1 late',tools:'21 units · 4 in use',cand:'24 candidates added',pend:2,rep:3,rev:2};
 function $(i){return document.getElementById(i)}
@@ -112,7 +112,17 @@ function cards(){
   $('hi').textContent='Welcome, '+(head?'Dr. Ahmed':'Dr. Sara')}
 $('out').onclick=function(){session.logout()};
 ALX_install($('inst'),$('ip'));
-cards();
+var S={cal:'Next: Basic Laparoscopic Surgery',hands:'Station planning',att:'Team check-in',tools:'Inventory',cand:'Import candidates',pend:0,rep:0,rev:0};
+(async function(){
+  try {
+    var courses=await api('/api/courses'); S.cal='Next: '+(courses.courses&&courses.courses.length?courses.courses[0].name:'none');
+    var tools=await api('/api/tools'); S.tools=(tools.tools||[]).length+' units';
+    var rc=await api('/api/tools/repair-count'); S.rep=rc.count||0;
+    var cands=await api('/api/candidates'); S.cand=(cands.candidates||[]).length+' candidates';
+    var users=await api('/api/users/pending'); S.pend=(users.users||[]).length;
+  } catch(e){}
+  cards();
+})();
 </script>
 </body>
 </html>
