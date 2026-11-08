@@ -144,6 +144,24 @@ $('pd').onchange=function(e){PD=e.target.value;init();render()};
 $('rh').onclick=function(){head=true;sel=null;render()};$('ri').onclick=function(){head=false;sel=null;render()};
 init();render();
 </script>
+<script>
+(async function(){
+  try {
+    var cd = await api('/api/courses/current-day');
+    if (cd && cd.day) {
+      window.CDAY = cd.day._id;
+      var users = await api('/api/users');
+      var att = await api('/api/attendance?courseDayId='+cd.day._id);
+      var amap = {}; (att.attendance||[]).forEach(function(a){ amap[a.userId]=a; });
+      // wire clear assignments
+      document.addEventListener('click', async function(e){
+        var b = e.target.closest('#clr'); if (!b) return;
+        try { await api('/api/attendance/assignments?courseDayId='+window.CDAY, { method:'DELETE' }); } catch(err){ console.error(err); }
+      }, true);
+    }
+  } catch(e){ console.error('attendance load failed', e); }
+})();
+</script>
 </body>
 </html>
 
