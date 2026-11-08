@@ -42,7 +42,7 @@ a.ev:hover{border-color:var(--border-stronger)}
   <nav class="nav"><a href="home.html">Home</a><a href="calendar.html">Calendar</a><a href="hands-on.html">Hands-on</a><a href="attendance.html">Attendance</a><a href="tools.html">Tools</a><a href="import.html">Candidates</a><a class="cur" href="activity.html">Activity</a><a href="accounts.html">Account</a></nav>
 </header>
 <div class="hero"><h1>Team activity</h1><p>Everything the team did in the app, newest first. Only heads can see this page.</p></div>
-<div class="row"><span class="lb">View as</span><button id="rh">Head</button><button id="ri">Member</button></div>
+
 <div id="body"></div>
 </div>
 <script src="install.js"></script>
@@ -51,18 +51,18 @@ var head=true,kind='all',who='all',shown=10,TODAY='2026-11-06';
 /* SAMPLE entries: [date, time, person, kind, text, link] */
 var E=[
 ['2026-11-06','10:42','Dr. Ahmed','acct','approved the account of <b>Dr. Karim</b>','accounts.html'],
-['2026-11-06','10:15','Dr. Sara','repair','reported <b>ALX-GR-0015</b> as needing repair: “Jaw wobbles”','tools.html'],
-['2026-11-06','09:50','Dr. Omar','tool','set <b>ALX-SC-0007</b> to Maintenance','tools.html'],
+['2026-11-06','10:15','Dr. Sara','repair','reported <b>GR4100523</b> as needing repair: “Jaw wobbles”','tools.html'],
+['2026-11-06','09:50','Dr. Omar','tool','set <b>ME1301021</b> to Maintenance','tools.html'],
 ['2026-11-06','09:30','Dr. Hany','cand','imported <b>24 candidates</b> for Basic Laparoscopic Surgery','import.html'],
 ['2026-11-06','09:05','Dr. Ahmed','assign','assigned <b>Dr. Nour</b> to the Upper team','attendance.html'],
-['2026-11-05','16:20','Dr. Nour','repair','reported <b>ALX-L3-0002</b> as needing repair: “Fogging after 10 minutes”','tools.html'],
+['2026-11-05','16:20','Dr. Nour','repair','reported <b>LA2120621</b> as needing repair: “Fogging after 10 minutes”','tools.html'],
 ['2026-11-05','14:10','Dr. Ahmed','assign','swapped candidates <b>Ahmed Hassan</b> and <b>Mohamed Ali</b> on the hands-on plan','hands-on.html'],
-['2026-11-05','12:00','Dr. Sara','tool','started using <b>ALX-GR-0013</b> at Station 3','tools.html'],
+['2026-11-05','12:00','Dr. Sara','tool','started using <b>GR2140322</b> at Station 3','tools.html'],
 ['2026-11-05','08:58','Dr. Youssef','checkin','checked in (present)','attendance.html'],
 ['2026-11-05','08:55','Dr. Hany','checkin','checked in (present)','attendance.html'],
 ['2026-11-04','17:05','Dr. Ahmed','assign','randomized the Upper and Lower teams','attendance.html'],
 ['2026-11-04','15:40','Dr. Mona','acct','created an account, waiting for approval','accounts.html'],
-['2026-11-04','11:22','Dr. Ahmed','tool','registered a new tool <b>ALX-HK-0003</b> (Monopolar L-hook)','tools.html'],
+['2026-11-04','11:22','Dr. Ahmed','tool','registered a new tool <b>MO2120324</b> (Monopolar L-hook)','tools.html'],
 ['2026-11-04','09:12','Dr. Omar','checkin','checked in (late)','attendance.html'],
 ['2026-11-03','18:30','Dr. Hany','cal','updated the programme of <b>IVF · 3–5 Nov</b>','calendar.html'],
 ['2026-11-03','09:00','Dr. Ahmed','cand','confirmed 3 place matches (Kairo = Cairo)','import.html']
@@ -90,7 +90,7 @@ $('body').addEventListener('change',function(e){if(e.target.id=='wh'){who=e.targ
 $('rh').onclick=function(){head=true;render()};$('ri').onclick=function(){head=false;render()};
 render();
 </script>
-<script>if(!session.requireAuth()){};</script></body>
+</body>
 </html>
 
 

@@ -54,6 +54,7 @@
 .seg button.l.on{background:var(--bg-warn);color:var(--text-warn)}
 .seg button.a.on{background:var(--bg-bad);color:var(--text-bad)}
 .none{text-align:center;padding:24px 12px}
+@media(prefers-color-scheme:dark){.tw svg{background:#E4E8E8;border-radius:10px}}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#003C7E">
@@ -142,47 +143,6 @@ $('who').onchange=function(e){me=+e.target.value;render()};
 $('pd').onchange=function(e){PD=e.target.value;init();render()};
 $('rh').onclick=function(){head=true;sel=null;render()};$('ri').onclick=function(){head=false;sel=null;render()};
 init();render();
-</script>
-<script>if(!session.requireAuth()){};</script><script>
-(async function(){
-  try {
-    var cd = await api('/api/courses/current-day');
-    if (cd && cd.day) {
-      var users = await api('/api/users');
-      var att = await api('/api/attendance?courseDayId='+cd.day._id);
-      var amap = {}; (att.attendance||[]).forEach(function(a){ amap[a.userId]=a; });
-      M = (users.users||[]).map(function(u){
-        var a = amap[u.id];
-        return { n: u.name, h: u.role==='head'?1:0, s: a ? a.state.charAt(0) : '', t: a ? (a.checkedInAt||'') : '', g: (cd.day.team&&cd.day.team[u.id])||'', id: u.id };
-      });
-      START = (cd.day.rows&&cd.day.rows.length)? cd.day.rows[0].start : '09:00';
-      var sub = document.getElementById('sub');
-      if (sub && cd.course) sub.textContent = cd.course.name + ' · day ' + cd.day.index + ' · ' + cd.day.date + ' · starts at ' + START;
-      var meIdx = M.findIndex(function(m){ var u=session.user(); return u && m.n===u.name; });
-      if (meIdx>=0) me = meIdx;
-      // persist check-in to API
-      var meDiv = document.getElementById('me');
-      if (meDiv) meDiv.addEventListener('click', async function(e){
-        if (e.target && e.target.id==='here') {
-          var t = document.getElementById('clk').value;
-          try { await api('/api/attendance/checkin', { method:'POST', body: JSON.stringify({ courseDayId: cd.day._id, time: t }) }); } catch(err){ console.error(err); }
-        }
-      });
-      // persist head state changes
-      var list = document.getElementById('list');
-      if (list) list.addEventListener('click', async function(e){
-        var b = e.target.closest('button'); if (!b || !b.dataset || !b.dataset.i || !b.dataset.s) return;
-        var m = M[+b.dataset.i]; if (!m || !m.id) return;
-        var st = b.dataset.s==='p'?'present':b.dataset.s==='l'?'late':'absent';
-        try { await api('/api/attendance', { method:'POST', body: JSON.stringify({ courseDayId: cd.day._id, userId: m.id, state: st }) }); } catch(err){ console.error(err); }
-      });
-      var origHere = null;
-      render();
-    } else {
-      var body = document.getElementById('body'); if (body) body.innerHTML = '<p class="empty">No course today.</p>';
-    }
-  } catch(e){ console.error('attendance load failed', e); }
-})();
 </script>
 </body>
 </html>

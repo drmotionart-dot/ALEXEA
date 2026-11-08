@@ -79,6 +79,8 @@ h3.sh{font-size:13px;font-weight:500;margin:12px 0 4px}
 .f2 label{font-size:12px;color:var(--text-2);display:block}
 .f2 input,.f2 select{display:block;width:100%;margin-top:4px;font:inherit;font-size:14px;color:var(--text);background:var(--surface-2);border:.5px solid var(--border-strong);border-radius:var(--radius);padding:7px 10px}
 .pv2{background:var(--surface-2);border-radius:10px;padding:6px;max-width:260px}
+@media(prefers-color-scheme:dark){.th,.big,.pv2{background:#E4E8E8}}
+@media(max-width:560px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.nmx{font-size:12px}.cd{padding:6px 8px}}
 @media(min-width:1100px){.wrap{max-width:1280px}.grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}}
 </style>
 <link rel="stylesheet" href="topbar.css">
@@ -94,7 +96,7 @@ h3.sh{font-size:13px;font-weight:500;margin:12px 0 4px}
 </header>
 
 <div class="row">
-  <input id="sc" class="sc" placeholder="Search tools, or enter a serial such as ALX-GR-0012" aria-label="Search tools or serial">
+  <input id="sc" class="sc" placeholder="Search tools, or enter a serial such as GR5071126" aria-label="Search tools or serial">
   <button id="scb"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M4 12h16"/></svg>Open serial</button>
   <button id="cam"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h2l2-3h6l2 3h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>Scan with camera</button>
   <button id="addb"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add tool</button>
@@ -102,7 +104,7 @@ h3.sh{font-size:13px;font-weight:500;margin:12px 0 4px}
 </div>
 <p class="er" id="er" style="display:none"></p>
 <div id="cv"><video id="vd" playsinline muted></video><div class="row" style="margin:6px 0 0"><span style="font-size:12px;color:var(--text-2)">Point at the QR code or barcode on the tool</span><button id="cx">Close camera</button></div></div>
-<div class="row"><span class="lb">View as</span><button id="rh">Head</button><button id="ri">Member</button></div>
+
 <div class="row" id="ct"></div>
 <div class="row" id="sfr"></div>
 <div class="sm" id="sm"></div>
@@ -118,27 +120,27 @@ h3.sh{font-size:13px;font-weight:500;margin:12px 0 4px}
    Unit fields: s serial, t type code, st a|u|m, reg, last, loc, h history [date,kind,note], c comments [by,date,text,needsRepair] */
 var T={GR:['Grasper, ratchet 5 mm','Hand instruments','grasper'],MD:['Maryland dissector','Hand instruments','maryland'],SC:['Metzenbaum scissors','Hand instruments','scissors'],NH:['Needle holder','Hand instruments','needle'],SI:['Suction and irrigation cannula','Hand instruments','suction'],TR:['Trocar and cannula 10 mm','Access','trocar'],VN:['Veress needle','Access','veress'],L0:['Laparoscope 0° (green)','Optics','l0'],L3:['Laparoscope 30° (red)','Optics','l30'],LC:['Chameleon lens (black)','Optics','lch'],HY:['Hysteroscope set','Gynecology and urology','hyst'],RS:['Resectoscope 26 Fr','Gynecology and urology','resect'],UM:['Uterine manipulator','Gynecology and urology','manip'],HM:['Harmonic handpiece','Energy','harm'],HK:['Monopolar L-hook','Energy','hook'],LS:['Linear stapler','Staplers','lstap'],CS:['Circular stapler','Staplers','cstap']};
 var U=[
-{s:'ALX-GR-0012',t:'GR',st:'a',reg:'2022-03-14',last:'2026-08-20',loc:'',h:[['2026-08-20','Routine check','Jaw alignment ok, ratchet cleaned'],['2025-02-11','Service','Pin replaced']],c:[]},
-{s:'ALX-GR-0013',t:'GR',st:'u',reg:'2022-03-14',last:'2026-07-02',loc:'Day 2 · Station 3 · Ahmed Hassan, Mohamed Ali',h:[['2026-07-02','Routine check','No issues']],c:[['Dr. Sara (member)','2026-11-05','Smooth ratchet, no play in jaw',0]]},
-{s:'ALX-GR-0014',t:'GR',st:'u',reg:'2023-05-10',last:'2026-06-11',loc:'Day 2 · Station 8 · Hala Fathy, Dina Samir',h:[['2026-06-11','Routine check','Jaw teeth ok']],c:[]},
-{s:'ALX-GR-0015',t:'GR',st:'m',reg:'2023-05-10',last:'2026-11-02',loc:'At repair workshop since 2 Nov 2026',h:[['2026-11-02','Sent for repair','Loose jaw pin']],c:[['Dr. Omar (member)','2026-11-01','Jaw wobbles, needs repair',1]]},
-{s:'ALX-MD-0004',t:'MD',st:'a',reg:'2023-01-09',last:'2026-06-18',loc:'',h:[['2026-06-18','Routine check','Insulation checked']],c:[]},
-{s:'ALX-SC-0007',t:'SC',st:'m',reg:'2021-10-30',last:'2026-10-28',loc:'At repair workshop since 28 Oct 2026',h:[['2026-10-28','Sent for sharpening','Blades dull after wet-lab day'],['2024-05-03','Sharpening','Blades re-ground']],c:[['Dr. Omar (member)','2026-10-27','Blades not cutting cleanly, needs repair',1]]},
-{s:'ALX-NH-0009',t:'NH',st:'a',reg:'2023-06-21',last:'2026-05-14',loc:'',h:[['2026-05-14','Routine check','Jaw inserts ok']],c:[]},
-{s:'ALX-SI-0002',t:'SI',st:'a',reg:'2022-11-02',last:'2026-04-09',loc:'',h:[['2026-04-09','Routine check','Valve seals replaced']],c:[]},
-{s:'ALX-TR-0015',t:'TR',st:'a',reg:'2024-02-17',last:'2026-03-01',loc:'',h:[['2026-03-01','Routine check','Valve flap ok']],c:[]},
-{s:'ALX-VN-0003',t:'VN',st:'a',reg:'2024-02-17',last:'2026-03-01',loc:'',h:[['2026-03-01','Routine check','Spring tested']],c:[]},
-{s:'ALX-L0-0001',t:'L0',st:'u',reg:'2021-06-12',last:'2026-09-10',loc:'Day 2 · Station 1 · Omar Khaled, Yousef Nasser',h:[['2026-09-10','Cleaning and check','Image clear'],['2023-08-22','Service','Light post cleaned']],c:[]},
-{s:'ALX-L3-0002',t:'L3',st:'a',reg:'2021-06-12',last:'2026-09-10',loc:'',h:[['2026-09-10','Cleaning and check','Slight fogging at distal end']],c:[['Dr. Nour (member)','2026-11-04','Fogging after 10 minutes, please check seal',1]]},
-{s:'ALX-LC-0001',t:'LC',st:'a',reg:'2025-09-01',last:'2026-09-10',loc:'',h:[['2026-09-10','Cleaning and check','Image clear']],c:[]},
-{s:'ALX-HY-0001',t:'HY',st:'a',reg:'2022-04-04',last:'2026-02-12',loc:'',h:[['2026-02-12','Routine check','Stopcocks greased']],c:[]},
-{s:'ALX-RS-0001',t:'RS',st:'m',reg:'2022-04-04',last:'2026-10-15',loc:'At repair workshop since 15 Oct 2026',h:[['2026-10-15','Sent for repair','Sheath insulation worn']],c:[['Dr. Ahmed (head)','2026-10-14','Insulation cracked at tip',1]]},
-{s:'ALX-UM-0005',t:'UM',st:'a',reg:'2023-09-19',last:'2026-01-30',loc:'',h:[['2026-01-30','Routine check','Lock lever ok']],c:[]},
-{s:'ALX-HM-0003',t:'HM',st:'u',reg:'2024-07-08',last:'2026-10-01',loc:'Assigned by head · Animal lab · Upper team',h:[['2026-10-01','Routine check','Blade tip ok']],c:[]},
-{s:'ALX-HK-0002',t:'HK',st:'a',reg:'2024-03-12',last:'2026-05-30',loc:'',h:[['2026-05-30','Routine check','Insulation tested']],c:[]},
-{s:'ALX-HK-0003',t:'HK',st:'u',reg:'2024-03-12',last:'2026-05-30',loc:'Day 2 · Station 5 · Mahmoud Ezzat, Amr Fawzy',h:[['2026-05-30','Routine check','Insulation tested']],c:[]},
-{s:'ALX-LS-0002',t:'LS',st:'a',reg:'2025-01-20',last:'2026-06-25',loc:'',h:[['2026-06-25','Routine check','Firing mechanism ok']],c:[]},
-{s:'ALX-CS-0001',t:'CS',st:'a',reg:'2025-01-20',last:'2026-06-25',loc:'',h:[['2026-06-25','Routine check','Wing knob smooth']],c:[]}
+{s:'GR1140322',t:'GR',st:'a',reg:'2022-03-14',last:'2026-08-20',loc:'',h:[['2026-08-20','Routine check','Jaw alignment ok, ratchet cleaned'],['2025-02-11','Service','Pin replaced']],c:[]},
+{s:'GR2140322',t:'GR',st:'u',reg:'2022-03-14',last:'2026-07-02',loc:'Day 2 · Station 3 · Ahmed Hassan, Mohamed Ali',h:[['2026-07-02','Routine check','No issues']],c:[['Dr. Sara (member)','2026-11-05','Smooth ratchet, no play in jaw',0]]},
+{s:'GR3100523',t:'GR',st:'u',reg:'2023-05-10',last:'2026-06-11',loc:'Day 2 · Station 8 · Hala Fathy, Dina Samir',h:[['2026-06-11','Routine check','Jaw teeth ok']],c:[]},
+{s:'GR4100523',t:'GR',st:'m',reg:'2023-05-10',last:'2026-11-02',loc:'At repair workshop since 2 Nov 2026',h:[['2026-11-02','Sent for repair','Loose jaw pin']],c:[['Dr. Omar (member)','2026-11-01','Jaw wobbles, needs repair',1]]},
+{s:'MA1090123',t:'MD',st:'a',reg:'2023-01-09',last:'2026-06-18',loc:'',h:[['2026-06-18','Routine check','Insulation checked']],c:[]},
+{s:'ME1301021',t:'SC',st:'m',reg:'2021-10-30',last:'2026-10-28',loc:'At repair workshop since 28 Oct 2026',h:[['2026-10-28','Sent for sharpening','Blades dull after wet-lab day'],['2024-05-03','Sharpening','Blades re-ground']],c:[['Dr. Omar (member)','2026-10-27','Blades not cutting cleanly, needs repair',1]]},
+{s:'NE1210623',t:'NH',st:'a',reg:'2023-06-21',last:'2026-05-14',loc:'',h:[['2026-05-14','Routine check','Jaw inserts ok']],c:[]},
+{s:'SU1021122',t:'SI',st:'a',reg:'2022-11-02',last:'2026-04-09',loc:'',h:[['2026-04-09','Routine check','Valve seals replaced']],c:[]},
+{s:'TR1170224',t:'TR',st:'a',reg:'2024-02-17',last:'2026-03-01',loc:'',h:[['2026-03-01','Routine check','Valve flap ok']],c:[]},
+{s:'VE1170224',t:'VN',st:'a',reg:'2024-02-17',last:'2026-03-01',loc:'',h:[['2026-03-01','Routine check','Spring tested']],c:[]},
+{s:'LA1120621',t:'L0',st:'u',reg:'2021-06-12',last:'2026-09-10',loc:'Day 2 · Station 1 · Omar Khaled, Yousef Nasser',h:[['2026-09-10','Cleaning and check','Image clear'],['2023-08-22','Service','Light post cleaned']],c:[]},
+{s:'LA2120621',t:'L3',st:'a',reg:'2021-06-12',last:'2026-09-10',loc:'',h:[['2026-09-10','Cleaning and check','Slight fogging at distal end']],c:[['Dr. Nour (member)','2026-11-04','Fogging after 10 minutes, please check seal',1]]},
+{s:'CH1010925',t:'LC',st:'a',reg:'2025-09-01',last:'2026-09-10',loc:'',h:[['2026-09-10','Cleaning and check','Image clear']],c:[]},
+{s:'HY1040422',t:'HY',st:'a',reg:'2022-04-04',last:'2026-02-12',loc:'',h:[['2026-02-12','Routine check','Stopcocks greased']],c:[]},
+{s:'RE1040422',t:'RS',st:'m',reg:'2022-04-04',last:'2026-10-15',loc:'At repair workshop since 15 Oct 2026',h:[['2026-10-15','Sent for repair','Sheath insulation worn']],c:[['Dr. Ahmed (head)','2026-10-14','Insulation cracked at tip',1]]},
+{s:'UT1190923',t:'UM',st:'a',reg:'2023-09-19',last:'2026-01-30',loc:'',h:[['2026-01-30','Routine check','Lock lever ok']],c:[]},
+{s:'HA1080724',t:'HM',st:'u',reg:'2024-07-08',last:'2026-10-01',loc:'Assigned by head · Animal lab · Upper team',h:[['2026-10-01','Routine check','Blade tip ok']],c:[]},
+{s:'MO1120324',t:'HK',st:'a',reg:'2024-03-12',last:'2026-05-30',loc:'',h:[['2026-05-30','Routine check','Insulation tested']],c:[]},
+{s:'MO2120324',t:'HK',st:'u',reg:'2024-03-12',last:'2026-05-30',loc:'Day 2 · Station 5 · Mahmoud Ezzat, Amr Fawzy',h:[['2026-05-30','Routine check','Insulation tested']],c:[]},
+{s:'LI1200125',t:'LS',st:'a',reg:'2025-01-20',last:'2026-06-25',loc:'',h:[['2026-06-25','Routine check','Firing mechanism ok']],c:[]},
+{s:'CI1200125',t:'CS',st:'a',reg:'2025-01-20',last:'2026-06-25',loc:'',h:[['2026-06-25','Routine check','Wing knob smooth']],c:[]}
 ];
 var TODAY='2026-11-07';
 var cats=['All','Access','Optics','Hand instruments','Energy','Staplers','Gynecology and urology'],cat='All',head=true,sel=null,flt=false,sf2='all',q='',stream=null,tm=null;
@@ -258,20 +260,6 @@ var rh0=$('rh').onclick,ri0=$('ri').onclick;
 $('rh').onclick=function(){rh0();syncAdd()};$('ri').onclick=function(){ri0();syncAdd()};
 syncAdd();
 list();
-</script>
-<script>if(!session.requireAuth()){};</script><script>
-document.getElementById('addp').addEventListener('click', async function(e){
-  var b = e.target.closest('#aps2'); if (!b) return;
-  // collect values
-  var serial = (document.getElementById('aps')||{}).value || AP.serial;
-  var date = (document.getElementById('apr')||{}).value || AP.date;
-  var typeCode = AP.type==='__new' ? (AP.l2||'').toUpperCase() : AP.type;
-  // new type handling: create type first? skip for now, use existing
-  try {
-    var r = await api('/api/tools', { method:'POST', body: JSON.stringify({ serial: serial, typeId: typeCode, status:'available', registeredAt: date }) });
-    console.log('tool saved', r);
-  } catch(err){ console.error('save tool failed', err); AP.err = err.message; }
-}, true);
 </script>
 </body>
 </html>

@@ -41,12 +41,16 @@
 .hb .s{font-size:14px;color:var(--text-2);margin:0}
 .bd{position:absolute;top:12px;right:12px;font-size:12px;font-weight:500;padding:3px 12px;border-radius:99px;z-index:1}
 .ft{font-size:12px;color:var(--text-2);text-align:center;margin:16px 0 0}
+@media(prefers-color-scheme:dark){.c-hand .hi,.c-att .hi,.c-tool .hi{background:linear-gradient(180deg,#E9EDEF,#DDE3E6)}}
+.hi .tl3{margin-left:7%;margin-right:auto}
+@media(max-width:900px){.hg>.hc:last-child:nth-child(2n+1){grid-column:1/-1}}
+@media(min-width:901px){.hg>.hc:last-child:nth-child(3n+1){grid-column:1/-1;flex-direction:row}.hg>.hc:last-child:nth-child(3n+1) .hi{width:40%;height:auto;min-height:210px;border-bottom:0;border-right:.5px solid var(--border)}.hg>.hc:last-child:nth-child(3n+1) .hb{flex:1;display:flex;flex-direction:column;justify-content:center}}
 @media(min-width:1100px){.hi{height:250px}.hb{padding:18px 20px 20px}.hb .t{font-size:22px}.hb .s{font-size:15px}.hg{gap:20px}}
 </style>
 <script src="js/config.js"></script><script src="js/api.js"></script><script src="js/session.js"></script></head>
 <body>
 <div class="wrap">
-<div class="row"><span class="lb">View as</span><button id="rh">Head</button><button id="ri">Member</button></div>
+
 <div class="hero">
   <div class="hu"><span class="who" id="who"></span><button id="inst">Install app</button><button id="out">Log out</button></div>
   <div class="lgo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div>
@@ -87,7 +91,7 @@ function candArt(){
    +row(62,'ع','سارة محمود','Sudan ✓','#DDEFD0','#2F6B14','#F7DCE8')+row(100,'EN','Ahmed Hassan','Egypt ✓','#DDEFD0','#2F6B14','#DCE9F8')+row(138,'EN','Omar Khaled','Same as…?','#FBEBC4','#7A5600','#DCE9F8')+row(176,'ع','نور سالم','Libya ✓','#DDEFD0','#2F6B14','#FBEBC4',1)+'</svg>'}
 function actArt(){
   function ev(y,c,bg,sym,w1,w2,t){return '<circle cx="40" cy="'+y+'" r="15" fill="'+bg+'" stroke="'+c+'" stroke-width="2"/><text x="40" y="'+(y+5)+'" fill="'+c+'" font-size="14" font-weight="600" text-anchor="middle" '+F+'>'+sym+'</text><rect x="68" y="'+(y-14)+'" width="'+w1+'" height="10" rx="5" fill="#C9CDCC"/><rect x="68" y="'+(y+4)+'" width="'+w2+'" height="8" rx="4" fill="#E4E2DA"/><text x="276" y="'+(y-5)+'" fill="#8A8F8E" font-size="10" text-anchor="end" '+F+'>'+t+'</text>'}
-  return '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><rect x="10" y="8" width="280" height="188" rx="14" fill="#fff" stroke="#C9CDCC"/><path d="M40 30V170" stroke="#E4E2DA" stroke-width="3"/>'+ev(42,'#2F6B14','#DDEFD0','✓',130,90,'10:42')+ev(100,'#9B2C20','#F8D9D5','!',150,110,'10:15')+ev(158,'#1F5FA6','#DCE9F8','⇄',120,80,'09:05')+'<rect x="226" y="16" width="56" height="20" rx="10" fill="#F8D9D5"/><text x="254" y="30" fill="#9B2C20" font-size="11" font-weight="600" text-anchor="middle" '+F+'>3 repair</text></svg>'}
+  return '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><rect x="10" y="8" width="280" height="188" rx="14" fill="#fff" stroke="#C9CDCC"/><path d="M40 30V170" stroke="#E4E2DA" stroke-width="3"/>'+ev(56,'#2F6B14','#DDEFD0','✓',130,90,'10:42')+ev(110,'#9B2C20','#F8D9D5','!',150,110,'10:15')+ev(164,'#1F5FA6','#DCE9F8','⇄',120,80,'09:05')+'<rect x="66" y="14" width="58" height="16" rx="8" fill="#F8D9D5"/><text x="95" y="26" fill="#9B2C20" font-size="10" font-weight="600" text-anchor="middle" '+F+'>3 repair</text></svg>'}
 function accArt(){
   return '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="M70 22L116 38V82C116 112 96 132 70 142C44 132 24 112 24 82V38Z" fill="#DCE9F8" stroke="#0A5CA8" stroke-width="3"/><path d="M50 82l14 14 28-30" fill="none" stroke="#0A5CA8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><rect x="136" y="30" width="148" height="64" rx="12" fill="#fff" stroke="#C9CDCC"/><circle cx="162" cy="62" r="15" fill="#FBEBC4"/><text x="162" y="67" fill="#7A5600" font-size="13" font-weight="600" text-anchor="middle" '+F+'>K</text><text x="186" y="58" fill="#141413" font-size="12" font-weight="600" '+F+'>Dr. Karim</text><rect x="186" y="66" width="44" height="18" rx="9" fill="#DDEFD0"/><text x="208" y="79" fill="#2F6B14" font-size="10" text-anchor="middle" '+F+'>Approve</text><rect x="136" y="106" width="148" height="64" rx="12" fill="#fff" stroke="#C9CDCC"/><circle cx="162" cy="138" r="15" fill="#E5E1F8"/><text x="162" y="143" fill="#4B3FA6" font-size="13" font-weight="600" text-anchor="middle" '+F+'>M</text><text x="186" y="134" fill="#141413" font-size="12" font-weight="600" '+F+'>Dr. Mona</text><rect x="186" y="142" width="44" height="18" rx="9" fill="#DDEFD0"/><text x="208" y="155" fill="#2F6B14" font-size="10" text-anchor="middle" '+F+'>Approve</text></svg>'}
 function myArt(){
@@ -107,11 +111,11 @@ function cards(){
   $('who').textContent=head?'Dr. Ahmed · head':'Dr. Sara · member';
   $('hi').textContent='Welcome, '+(head?'Dr. Ahmed':'Dr. Sara')}
 $('rh').onclick=function(){head=true;cards()};$('ri').onclick=function(){head=false;cards()};
-$('out').onclick=function(){$('hi').textContent='Logged out (preview). The real app returns to the login screen.'};
+$('out').onclick=function(){session.logout()};
 ALX_install($('inst'),$('ip'));
 cards();
 </script>
-<script>if(!session.requireAuth()){};</script></body>
+</body>
 </html>
 
 

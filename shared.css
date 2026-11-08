@@ -123,3 +123,6 @@ button.xl{padding:12px 28px;font-size:17px;border-radius:12px}
 @media(min-width:1100px){.wrap{max-width:1280px}.hero{min-height:130px}.hero>*{max-width:55%}.cal .cl{min-height:92px}}
 
 .top .hl{display:flex;align-items:center;gap:12px;text-decoration:none}
+
+.nav a{white-space:nowrap;flex:none}
+@media(max-width:560px){.hero p{max-width:66%}}
