@@ -87,8 +87,19 @@ function render(){
   $('body').innerHTML=h}
 $('body').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;if(b.dataset.k){kind=b.dataset.k;shown=10;render()}if(b.id=='more'){shown+=10;render()}});
 $('body').addEventListener('change',function(e){if(e.target.id=='wh'){who=e.target.value;shown=10;render()}});
-$('rh').onclick=function(){head=true;render()};$('ri').onclick=function(){head=false;render()};
+/* view-as removed; role from login */
 render();
+</script>
+<script>
+(async function(){
+  try {
+    var data = await api('/api/activity');
+    if (data.entries && data.entries.length) {
+      E = data.entries.map(function(e){ return [e.date, e.time, e.by, e.kind, e.text, e.link||'activity.html']; });
+      if (typeof render === 'function') render();
+    }
+  } catch(e){ console.error('activity load failed', e); }
+})();
 </script>
 </body>
 </html>
