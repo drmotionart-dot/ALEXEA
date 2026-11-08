@@ -210,7 +210,7 @@ $('cam').onclick=function(){
   }).catch(function(){showErr('Camera access was blocked. Allow camera access in your browser and try again.')})};
 $('cx').onclick=stopCam;
 $('bell').onclick=function(){flt=!flt;list()};
-$('rh').onclick=function(){head=true;list();detail()};
+/* view-as removed */
 $('ri').onclick=function(){head=false;list();detail()};
 /* ===== Add tool (heads only): choose a preset category and type, serial is suggested, registration date, optional photo ===== */
 var CATS6=['Access','Optics','Hand instruments','Energy','Staplers','Gynecology and urology'];
@@ -256,8 +256,6 @@ $('addp').addEventListener('click',function(e){var b=e.target.closest('button');
     if(AP.type=='__new')T[code]=[AP.name.trim(),AP.cat,AP.draw,(AP.l2||AP.name).replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase()];
     U.push({s:s,t:code,st:'a',reg:AP.date,last:AP.date,loc:'',h:[[AP.date,'Registered','Added to the inventory']],c:[],photo:AP.photo||undefined});
     $('addp').style.display='none';reset();pick(s)}});
-var rh0=$('rh').onclick,ri0=$('ri').onclick;
-$('rh').onclick=function(){rh0();syncAdd()};$('ri').onclick=function(){ri0();syncAdd()};
 syncAdd();
 list();
 </script>

@@ -110,7 +110,6 @@ function cards(){
   $('rh').className=head?'on':'';$('ri').className=head?'':'on';
   $('who').textContent=head?'Dr. Ahmed · head':'Dr. Sara · member';
   $('hi').textContent='Welcome, '+(head?'Dr. Ahmed':'Dr. Sara')}
-$('rh').onclick=function(){head=true;cards()};$('ri').onclick=function(){head=false;cards()};
 $('out').onclick=function(){session.logout()};
 ALX_install($('inst'),$('ip'));
 cards();
