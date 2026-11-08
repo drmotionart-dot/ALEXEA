@@ -132,6 +132,31 @@ input();
   }, true);
 })();
 </script>
+<script>
+// Gender lookup via backend (overrides design's local NAMES-based detection)
+var _genderCache = {};
+async function _resolveGender(name){
+  var first = (name||'').trim().split(/\s+/)[0];
+  if (!first) return 'u';
+  if (_genderCache[first] !== undefined) return _genderCache[first];
+  try { var r = await api('/api/names/gender?name='+encodeURIComponent(first)); _genderCache[first] = r.gender || 'u'; }
+  catch(e){ _genderCache[first]='u'; }
+  return _genderCache[first];
+}
+var _origGo = window.go;
+window.go = async function(){
+  // resolve genders for all rows first
+  if (window.rows && window.rows.length) {
+    for (var i=0;i<window.rows.length;i++){
+      var r = window.rows[i];
+      if (r && r[0]) { r._gender = await _resolveGender(r[0]); }
+    }
+  }
+  if (typeof _origGo === 'function') _origGo();
+};
+// override gender() to use resolved cache
+window.gender = function(n){ var first=(n||'').trim().split(/\s+/)[0]; return _genderCache[first] || 'u'; };
+</script>
 </body>
 </html>
 
