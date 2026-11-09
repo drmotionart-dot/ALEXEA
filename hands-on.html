@@ -3,13 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hands-on page · design source of truth</title>
-<!--
-  DESIGN SOURCE OF TRUTH for the hands-on page. Match layout, colors, drawings,
-  labels and behavior exactly. Do not restyle. Colors are CSS variables so the
-  app supports light and dark mode. Icons are inline SVG (no external files).
-  Candidate names use dir="auto" so Arabic and English display correctly.
--->
+<title>Hands-on · ALEXEA Course Manager</title>
 <style>
 :root{
   --page:#FAF9F5;--surface-1:#F1EFE8;--surface-2:#FFFFFF;
@@ -73,7 +67,6 @@ button.on{background:var(--surface-1);border-color:var(--border-stronger)}
 .sq{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:4px}
 #msg{font-size:13px;color:var(--text-2);margin:0 0 8px;display:none}
 .lock{font-size:12px;padding:2px 10px;border-radius:var(--radius);background:var(--bg-warn);color:var(--text-warn);display:none}
-/* Present mode: bigger names, controls hidden */
 body.present .top,body.present .controls,body.present .lg,body.present .nm button,body.present .q{display:none}
 body.present .nm{font-size:17px;padding:8px 10px}
 body.present .nm .c{font-size:14px}
@@ -83,7 +76,7 @@ body.present .tp{font-size:13px}
 <link rel="stylesheet" href="topbar.css">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#003C7E">
-<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <script src="js/config.js"></script><script src="js/api.js"></script><script src="js/session.js"></script></head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -133,12 +126,12 @@ body.present .tp{font-size:13px}
 
 <div class="wrap">
 <header class="top">
-  <a class="hl" href="home.html" aria-label="Home"><div class="logo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><span class="brand">ALEXEA Course Manager</span></a>
-  <nav class="nav"><a href="home.html">Home</a><a href="calendar.html">Calendar</a><a class="cur" href="hands-on.html">Hands-on</a><a href="attendance.html">Attendance</a><a href="tools.html">Tools</a><a href="import.html">Candidates</a><a href="activity.html">Activity</a><a href="accounts.html">Account</a></nav>
+  <a class="hl" href="/home" aria-label="Home"><div class="logo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><span class="brand">ALEXEA Course Manager</span></a>
+  <nav class="nav"><a href="/home">Home</a><a href="/calendar">Calendar</a><a class="cur" href="/hands-on">Hands-on</a><a href="/attendance">Attendance</a><a href="/tools">Tools</a><a href="/candidates">Candidates</a><a href="/activity">Activity</a><a href="/account">Account</a></nav>
 </header>
 
   <div class="hd">
-    <span class="t" id="title">Basic laparoscopic workshop · Day 2</span>
+    <span class="t" id="title">Hands-on</span>
     <span class="lock" id="lockTag">Plan locked</span>
     <div class="right controls">
       <button id="lockBtn">Lock plan</button>
@@ -164,61 +157,217 @@ body.present .tp{font-size:13px}
   </div>
 </div>
 <script src="install.js"></script>
+<script src="station-sprite.js"></script>
 <script>
-/* SAMPLE DATA ONLY. The real app loads candidates from the API. [name, gender m|f|u, country code] */
-var C=[["Ahmed Hassan","m","EG"],["Mohamed Ali","m","EG"],["Sara Mostafa","f","EG"],["Mariam Adel","f","EG"],["Nour Salem","u","EG"],["Hala Fathy","f","EG"],["Dina Samir","f","EG"],["Reem Tarek","f","EG"],["Mahmoud Ezzat","m","EG"],["Amr Fawzy","m","EG"],["Tamer Gaber","m","EG"],["Hossam Rizk","m","EG"],["Omar Khaled","m","SA"],["Yousef Nasser","m","SA"],["Khaled Said","m","LY"],["Ibrahim Younis","m","LY"],["Salma Nabil","f","SD"],["Rana Hamdy","f","SD"],["Mostafa Idris","m","YE"],["Adam Kamal","m","YE"],["Farida Wael","f","EG"],["Laila Magdy","f","EG"],["Jana Osama","u","EG"],["Heba Zaki","f","EG"]];
-var L=2,pm=0,view=0,sel=-1,gq=-1,locked=false,present=false;
-var NM={d:["Dry","t-d"],w:["Wet","t-w"],a:["Animal","t-a"]};
-var SW='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10h13l-4-4M17 14H4l4 4"/></svg>';
-function $(i){return document.getElementById(i)}
-function tp(s){if(s<6)return 'd';return L==0?'d':(L==1?'w':'a')}
-function idx(s,k){var b=s*2+k;return (L==3&&pm)?(b+12)%24:b}
-function esc(x){var e=document.createElement('div');e.textContent=x;return e.innerHTML}
-function render(){
-  var h='',s0=view==2?0:view*6,cnt=view==2?12:6;
-  for(var i=0;i<cnt;i++){
-    var s=s0+i,t=tp(s),x='<div class="st"><p class="sn"><span>Station '+(s+1)+'</span><span class="tp '+NM[t][1]+'">'+NM[t][0]+'</span></p><svg viewBox="0 0 220 200" width="100%" role="img" aria-label="'+NM[t][0]+' lab station"><use href="#'+t+'"/></svg>';
-    for(var k=0;k<2;k++){
-      var j=idx(s,k),c=C[j],ctl='';
-      if(c[1]=='u'&&!locked&&gq!==j)ctl+='<button class="q" data-q="'+j+'" aria-label="Set gender for '+esc(c[0])+'">?</button>';
-      if(c[1]=='u'&&gq===j)ctl+='<button data-g="m" data-i="'+j+'">M</button><button data-g="f" data-i="'+j+'">F</button>';
-      if(!locked)ctl+='<button data-i="'+j+'" data-sw="1" aria-label="Swap '+esc(c[0])+'">'+SW+'</button>';
-      x+='<div class="nm '+c[1]+(sel===j?' sel':'')+'"><span class="n" dir="auto">'+esc(c[0])+'</span><span class="c">'+c[2]+'</span>'+ctl+'</div>';
-    }
-    h+=x+'</div>';
-  }
-  $('g').innerHTML=h;$('g').className='grid'+(view==2?' all':'');
-  $('bu').className=view==0?'on':'';$('bl').className=view==1?'on':'';$('ba').className=view==2?'on':'';
-  $('bu2').className=view==0?'on':'';$('bl2').className=view==1?'on':'';$('ba2').className=view==2?'on':'';
-  $('am').className=pm==0?'on':'';$('pm').className=pm==1?'on':'';
-  $('pmrow').style.display=L==3?'flex':'none';
-  document.querySelectorAll('[data-l]').forEach(function(b){b.className=(+b.dataset.l==L)?'on':''});
-  $('lockTag').style.display=locked?'inline-block':'none';
-  $('lockBtn').textContent=locked?'Unlock plan':'Lock plan';
-  $('pageRow').style.display=present?'flex':'none';
-  $('presBtn').textContent=present?'Exit Present mode':'Present mode';
-  document.body.className=present?'present':'';
+var L = 0, pm = 0, view = 0, sel = -1, gq = -1, locked = false, present = false;
+var day = null, course = null, cands = [], order = [], places = {}, head = false, byId = {};
+var NM = { d: ['Dry', 't-d'], w: ['Wet', 't-w'], a: ['Animal', 't-a'] };
+var TYPE = { d12: 0, dw: 1, da: 2, sh: 3, none: -1 };
+var TYPES = ['d12', 'dw', 'da', 'sh'];
+var SW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10h13l-4-4M17 14H4l4 4"/></svg>';
+
+function $(i) { return document.getElementById(i); }
+function esc(x) { var e = document.createElement('div'); e.textContent = x == null ? '' : x; return e.innerHTML; }
+function tp(s) { if (s < 6) return 'd'; return L === 0 ? 'd' : (L === 1 ? 'w' : 'a'); }
+function idx(s, k) { var b = s * 2 + k; return (L === 3 && pm) ? (b + 12) % 24 : b; }
+function cname(c) { return (c && (c.nameEn || c.nameAr || c.name)) || '—'; }
+function candAt(j) { return byId[order[j]] || null; }
+function ccountry(c) {
+  var p = c && places[c.countryId];
+  var n = p ? (p.canonicalEn || p.canonicalAr || '') : '';
+  if (!n) return c && c.isEgyptian ? 'EG' : '';
+  return n.length > 3 ? n.slice(0, 2).toUpperCase() : n.toUpperCase();
 }
-function note(m){var e=$('msg');e.textContent=m;e.style.display='block'}
-$('g').addEventListener('click',function(e){
-  var b=e.target.closest('button');if(!b||locked&&!b.dataset.q)return;
-  if(b.dataset.q){gq=+b.dataset.q;render();return}
-  if(b.dataset.g){C[+b.dataset.i][1]=b.dataset.g;gq=-1;render();return}
-  var i=+b.dataset.i;
-  if(sel<0){sel=i}else{if(sel!==i){var t=C[sel];C[sel]=C[i];C[i]=t}sel=-1}
+
+function render() {
+  chrome();
+  var h = '', s0 = view === 2 ? 0 : view * 6, cnt = view === 2 ? 12 : 6;
+  if (day && day.type === 'none' && !present) {
+    $('g').innerHTML = '<p class="empty">No hands-on is planned for this day in the calendar.' + (head ? ' Choose a day type above to plan the stations.' : ' A head can add it.') + '</p>';
+    $('g').className = 'grid';
+    document.querySelectorAll('[data-l]').forEach(function (b) { b.className = ''; });
+    $('pmrow').style.display = 'none';
+    return;
+  }
+  if (!cands.length) {
+    $('g').innerHTML = '<p class="empty">No candidates for this course yet. Import them from the Candidates page.</p>';
+    $('g').className = 'grid';
+    return;
+  }
+  for (var i = 0; i < cnt; i++) {
+    var s = s0 + i, t = tp(s), x = '<div class="st"><p class="sn"><span>Station ' + (s + 1) + '</span><span class="tp ' + NM[t][1] + '">' + NM[t][0] + '</span></p><svg viewBox="0 0 220 200" width="100%" role="img" aria-label="' + NM[t][0] + ' lab station"><use href="#' + t + '"/></svg>';
+    for (var k = 0; k < 2; k++) {
+      var j = idx(s, k), c = candAt(j);
+      if (!c) { x += '<div class="nm u"><span class="n nt">Empty</span></div>'; continue; }
+      var g = c.gender || 'u', ctl = '';
+      if (g === 'u' && !locked && gq !== j) ctl += '<button class="q" data-q="' + j + '" aria-label="Set gender for ' + esc(cname(c)) + '">?</button>';
+      if (g === 'u' && gq === j) ctl += '<button data-g="m" data-i="' + j + '">M</button><button data-g="f" data-i="' + j + '">F</button>';
+      if (!locked) ctl += '<button data-i="' + j + '" data-sw="1" aria-label="Swap ' + esc(cname(c)) + '">' + SW + '</button>';
+      x += '<div class="nm ' + g + (sel === j ? ' sel' : '') + '"><span class="n" dir="auto">' + esc(cname(c)) + '</span><span class="c">' + esc(ccountry(c)) + '</span>' + ctl + '</div>';
+    }
+    h += x + '</div>';
+  }
+  $('g').innerHTML = h;
+  $('g').className = 'grid' + (view === 2 ? ' all' : '');
+}
+
+/* page chrome: day-type highlight, paging, lock and present controls, title.
+   Runs before the station grid so every state (no hands-on, no candidates, normal) is consistent. */
+function chrome() {
+  $('bu').className = view === 0 ? 'on' : ''; $('bl').className = view === 1 ? 'on' : ''; $('ba').className = view === 2 ? 'on' : '';
+  $('bu2').className = view === 0 ? 'on' : ''; $('bl2').className = view === 1 ? 'on' : ''; $('ba2').className = view === 2 ? 'on' : '';
+  $('am').className = pm === 0 ? 'on' : ''; $('pm').className = pm === 1 ? 'on' : '';
+  $('pmrow').style.display = L === 3 ? 'flex' : 'none';
+  document.querySelectorAll('[data-l]').forEach(function (b) { b.className = (+b.dataset.l === L) ? 'on' : ''; });
+  $('lockTag').style.display = locked ? 'inline-block' : 'none';
+  $('lockBtn').textContent = locked ? 'Unlock plan' : 'Lock plan';
+  $('pageRow').style.display = present ? 'flex' : 'none';
+  $('presBtn').textContent = present ? 'Exit Present mode' : 'Present mode';
+  document.body.className = present ? 'present' : '';
+  $('title').textContent = course ? (course.name + ' · Day ' + (day.index || 1)) : 'Hands-on';
+}
+function note(m, bad) { var e = $('msg'); e.textContent = m; e.style.display = 'block'; e.style.color = bad ? 'var(--text-bad, #9B2C20)' : ''; }
+
+/* ---------- save ---------- */
+async function save() {
+  if (!day) return;
+  try {
+    await api('/api/courses/day/' + day._id, { method: 'PATCH', body: JSON.stringify({ plan: { morning: order, afternoon: order }, type: TYPES[L] || 'none', locked: locked }) });
+  } catch (ex) { note(ex.message, true); }
+}
+
+/* ---------- init ---------- */
+async function load(d) {
+  var qd = d || new URLSearchParams(location.search).get('date');
+  var res;
+  if (qd) res = await api('/api/courses/day-by-date/' + qd);
+  else res = await api('/api/courses/active-day');
+  if (!res || !res.day) {
+    $('g').innerHTML = '<p class="empty">No course day yet. Open the calendar to see the next course.</p>';
+    $('title').textContent = 'No course today';
+    return;
+  }
+  day = res.day; course = res.course;
+  L = TYPE[day.type] != null ? TYPE[day.type] : 0;
+  if (L < 0) L = 0;
+  locked = !!day.locked;
+  var c = await api('/api/candidates?courseId=' + day.courseId);
+  cands = c.candidates || [];
+  byId = {};
+  cands.forEach(function (x) { byId[String(x._id)] = x; });
+  try { var p = await api('/api/places?type=country'); (p.places || []).forEach(function (x) { places[String(x._id)] = x; }); } catch (ex) {}
+  if (!cands.length) { order = []; render(); return; }
+  // keep a stable order: the saved plan, then any new candidates
+  var saved = (day.plan && day.plan.morning) || [];
+  var ids = cands.map(function (x) { return String(x._id); });
+  var out = saved.filter(function (id) { return byId[String(id)]; }).map(String);
+  ids.forEach(function (id) { if (out.indexOf(id) < 0) out.push(id); });
+  order = out;
+  // if the plan lists ids and the array is short, pad with the rest
+  render();
+}
+
+$('g').addEventListener('click', async function (e) {
+  var b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.q) { gq = +b.dataset.q; render(); return; }
+  if (b.dataset.g) {
+    var j = +b.dataset.i, c = candAt(j);
+    if (c) {
+      try { await api('/api/candidates/' + c._id, { method: 'PATCH', body: JSON.stringify({ gender: b.dataset.g }) }); c.gender = b.dataset.g; }
+      catch (ex) { note(ex.message, true); }
+    }
+    gq = -1; render(); return;
+  }
+  if (locked) return;
+  var i = +b.dataset.i;
+  if (sel < 0) { sel = i; }
+  else {
+    if (sel !== i) {
+      var t = order[sel]; order[sel] = order[i]; order[i] = t;
+      await save();
+    }
+    sel = -1;
+  }
   render();
 });
-document.querySelectorAll('[data-l]').forEach(function(b){b.onclick=function(){L=+b.dataset.l;pm=0;sel=-1;render()}});
-$('am').onclick=function(){pm=0;sel=-1;render()};
-$('pm').onclick=function(){pm=1;sel=-1;render()};
-function pg(v){return function(){view=v;sel=-1;render()}}
-$('bu').onclick=pg(0);$('bl').onclick=pg(1);$('bu2').onclick=pg(0);$('bl2').onclick=pg(1);$('ba').onclick=pg(2);$('ba2').onclick=pg(2);
-$('lockBtn').onclick=function(){locked=!locked;sel=-1;gq=-1;render()};
-$('presBtn').onclick=function(){present=!present;sel=-1;gq=-1;render()};
-$('expBtn').onclick=function(){note('In the real app this creates a .pptx file of the final stations in your browser.')};
-render();
+
+document.querySelectorAll('[data-l]').forEach(function (b) {
+  b.onclick = async function () {
+    if (!head) { note('Only heads can change the day type.', true); return; }
+    if (locked) { note('Unlock the plan first.', true); return; }
+    L = +b.dataset.l; pm = 0; sel = -1;
+    if (day) day.type = TYPES[L] || 'none';
+    render();
+    await save();
+  };
+});
+$('am').onclick = function () { pm = 0; sel = -1; render(); };
+$('pm').onclick = function () { pm = 1; sel = -1; render(); };
+function pg(v) { return function () { view = v; sel = -1; render(); }; }
+$('bu').onclick = pg(0); $('bl').onclick = pg(1); $('bu2').onclick = pg(0); $('bl2').onclick = pg(1); $('ba').onclick = pg(2); $('ba2').onclick = pg(2);
+$('lockBtn').onclick = async function () {
+  if (!head) { note('Only heads can lock or unlock the plan.', true); return; }
+  locked = !locked; sel = -1; gq = -1;
+  if (day) day.locked = locked;
+  render();
+  await save();
+};
+$('presBtn').onclick = function () {
+  present = !present; sel = -1; gq = -1;
+  if (present && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function () {});
+  if (!present && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+  render();
+};
+
+/* PowerPoint export (PptxGenJS from a CDN) */
+$('expBtn').onclick = async function () {
+  if (!cands.length) return note('There are no candidates to export yet.', true);
+  try {
+    if (!window.PptxGenJS) await loadScript('https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js');
+    var pptx = new PptxGenJS();
+    pptx.layout = 'LAYOUT_16x9';
+    var title = course ? course.name + ' · Day ' + (day.index || 1) : 'Hands-on stations';
+    [0, 1].forEach(function (pg2) {
+      var sl = pptx.addSlide();
+      sl.addText(title + ' — ' + (pg2 === 0 ? 'Upper · stations 1–6' : 'Lower · stations 7–12'), { x: 0.3, y: 0.2, w: 9.4, h: 0.6, fontSize: 24, bold: true });
+      for (var i = 0; i < 6; i++) {
+        var s = pg2 * 6 + i, t = tp(s);
+        var x = 0.3 + (i % 3) * 3.15, y = 0.95 + Math.floor(i / 3) * 2.2;
+        sl.addShape(pptx.ShapeType.rect, { x: x, y: y, w: 3, h: 2, fill: { color: 'F1EFE8' }, line: { color: 'C9CDCC' } });
+        sl.addText('Station ' + (s + 1) + ' · ' + NM[t][0], { x: x + 0.1, y: y + 0.08, w: 2.8, h: 0.3, fontSize: 13, bold: true });
+        var names = [0, 1].map(function (k) { var c = candAt(idx(s, k)); return c ? cname(c) : ''; }).filter(Boolean);
+        sl.addText(names.length ? names.join('\n') : 'Empty', { x: x + 0.1, y: y + 0.45, w: 2.8, h: 1.3, fontSize: 16 });
+      }
+    });
+    await pptx.writeFile({ fileName: 'ALEXEA-hands-on-' + (day.date || '') + '.pptx' });
+    note('PowerPoint saved.');
+  } catch (ex) { note('Could not create the PowerPoint: ' + ex.message, true); }
+};
+function loadScript(src) {
+  return new Promise(function (resolve, reject) {
+    var s = document.createElement('script'); s.src = src; s.onload = resolve; s.onerror = function () { reject(new Error('could not load ' + src)); }; document.head.appendChild(s);
+  });
+}
+
+/* Present mode: light version check every 15 seconds */
+var version = null;
+setInterval(async function () {
+  if (!present || !day) return;
+  try {
+    var d = await api('/api/courses/day/' + day._id);
+    if (d.day && d.day.version !== undefined) {
+      if (version !== null && d.day.version !== version) { day = d.day; await load(day.date); }
+      version = d.day.version;
+    }
+  } catch (ex) {}
+}, 15000);
+
+(async function () {
+  if (!session.requireAuth()) return;
+  head = session.isHead();
+  try { await load(); } catch (ex) { note(ex.message, true); }
+})();
 </script>
 </body>
 </html>
-
-

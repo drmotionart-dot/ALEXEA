@@ -3,19 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Home · design source of truth</title>
+<title>Home · ALEXEA Course Manager</title>
 <link rel="stylesheet" href="shared.css">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#003C7E">
-<link rel="apple-touch-icon" href="assets/icon-192.png">
-<!--
-  DESIGN SOURCE OF TRUTH: Home page (route "/"). Match exactly. Do not restyle.
-  No top bar here. Big cards, each opens one main page. Every card picture is built from the app's own drawings:
-  the three station towers (station-sprite.js), the real instruments (tool-drawings.js), a November calendar
-  that uses the department colors, avatars, and the Arabic/English candidate table.
-  Summaries are LIVE in the real app (numbers below are SAMPLE). "View as" is preview-only.
-  "Install app" shows the real install prompt on Android and the Add to Home Screen steps on iPhone.
--->
+<link rel="apple-touch-icon" href="/icon-192.png">
 <style>
 .hero{min-height:150px}
 .hero .lgo{width:64px;height:64px;border-radius:14px}
@@ -55,7 +47,7 @@
   <div class="hu"><span class="who" id="who"></span><button id="inst">Install app</button><button id="out">Log out</button></div>
   <div class="lgo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div>
   <h1 id="hi">Welcome</h1>
-  <p>ALEXEA Course Manager · Saturday 7 November 2026</p>
+  <p id="dateLine">ALEXEA Course Manager</p>
 </div>
 <div class="ip" id="ip"></div>
 <div class="hg" id="hg"></div>
@@ -65,66 +57,220 @@
 <script src="station-sprite.js"></script>
 <script src="install.js"></script>
 <script>
-var head=session.isHead();
-/* SAMPLE summaries. In the real app these come from the API. */
-var S={cal:'Next: Basic Laparoscopic Surgery · tomorrow',hands:'Day 1 tomorrow · 12 dry stations · 24 candidates',att:'5 of 8 on site · 1 late',tools:'21 units · 4 in use',cand:'24 candidates added',pend:2,rep:3,rev:2};
-function $(i){return document.getElementById(i)}
-var F='font-family="system-ui,sans-serif"';
-function pill(x,y,w,t,bg,fg){return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="18" rx="9" fill="'+bg+'"/><text x="'+(x+w/2)+'" y="'+(y+13)+'" fill="'+fg+'" font-size="11" text-anchor="middle" '+F+'>'+t+'</text>'}
-function calArt(){
-  var col={3:'#E98AB5',4:'#E98AB5',5:'#E98AB5',8:'#EF9F7B',9:'#EF9F7B',10:'#EF9F7B',11:'#EF9F7B',15:'#E4577F',16:'#E4577F',17:'#E4577F',18:'#E4577F',22:'#EF9F7B',23:'#EF9F7B',24:'#EF9F7B',25:'#EF9F7B'},wd=['S','M','T','W','T','F','S'];
-  var s='<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g transform="rotate(-5 150 100)"><rect x="54" y="14" width="214" height="176" rx="12" fill="#EAF5F7" stroke="#B7D9DE"/></g><rect x="38" y="8" width="224" height="188" rx="12" fill="#fff" stroke="#C9CDCC"/><path d="M38 20a12 12 0 0 1 12-12h200a12 12 0 0 1 12 12v20H38z" fill="#1B8FA0"/><text x="250" y="30" fill="#fff" font-size="11" text-anchor="end" letter-spacing="1.5" '+F+'>NOVEMBER 2026</text>';
-  wd.forEach(function(d,i){s+='<text x="'+(61+i*30.5)+'" y="55" fill="#8A8F8E" font-size="9" text-anchor="middle" '+F+'>'+d+'</text>'});
-  for(var d=1;d<=30;d++){var c=(d-1)%7,r=Math.floor((d-1)/7),x=48+c*30.5,y=62+r*25,f=col[d],tx=f=='#E4577F'?'#fff':'#2A2A28';
-    s+=(f?'<rect x="'+x+'" y="'+y+'" width="26" height="21" rx="6" fill="'+f+'"/>':'')+(d==7?'<rect x="'+x+'" y="'+y+'" width="26" height="21" rx="6" fill="none" stroke="#141413" stroke-width="1.6"/>':'')+'<text x="'+(x+13)+'" y="'+(y+14)+'" fill="'+(f?tx:'#555')+'" font-size="10" text-anchor="middle" '+F+'>'+d+'</text>'}
-  return s+'</svg>'}
-function handsArt(){
-  return '<svg viewBox="0 0 660 216" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><use href="#d" x="0" y="14" width="220" height="200"/><use href="#w" x="220" y="14" width="220" height="200"/><use href="#a" x="440" y="14" width="220" height="200"/>'+pill(80,0,60,'Dry','#D7F0EA','#0B6B5B')+pill(300,0,60,'Wet','#FBE0CF','#8A3F12')+pill(520,0,60,'Animal','#E5E1F8','#4B3FA6')+'</svg>'}
-function avatar(x,y,t,bg,fg,ok){return '<circle cx="'+x+'" cy="'+y+'" r="15" fill="'+bg+'" stroke="#fff" stroke-width="2.5"/><text x="'+x+'" y="'+(y+5)+'" fill="'+fg+'" font-size="13" font-weight="600" text-anchor="middle" '+F+'>'+t+'</text><circle cx="'+(x+11)+'" cy="'+(y+11)+'" r="6" fill="'+ok+'" stroke="#fff" stroke-width="1.5"/>'}
-function attArt(){
-  return '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><rect x="10" y="8" width="280" height="90" rx="14" fill="#fff" stroke="#C9CDCC"/><text x="24" y="30" fill="#141413" font-size="13" font-weight="600" '+F+'>Upper team</text>'+pill(100,17,40,'Dry','#D7F0EA','#0B6B5B')+avatar(38,66,'A','#DCE9F8','#1F5FA6','#2F9E44')+avatar(72,66,'H','#F7DCE8','#8E2F5A','#2F9E44')+avatar(106,66,'N','#FBEBC4','#7A5600','#EF9F27')+'<use href="#d" x="196" y="14" width="86" height="78"/>'
-   +'<rect x="10" y="106" width="280" height="90" rx="14" fill="#fff" stroke="#C9CDCC"/><text x="24" y="128" fill="#141413" font-size="13" font-weight="600" '+F+'>Lower team</text>'+pill(100,115,40,'Wet','#FBE0CF','#8A3F12')+avatar(38,164,'O','#E5E1F8','#4B3FA6','#2F9E44')+avatar(72,164,'Y','#DDEFD0','#2F6B14','#2F9E44')+'<use href="#w" x="196" y="112" width="86" height="78"/></svg>'}
-function toolsArt(){return '<div class="tl3">'+toolSvg('grasper')+toolSvg('l0')+toolSvg('l30')+'</div>'}
-function candArt(){
-  function row(y,tag,name,chip,bg,fg,g,dash){return '<rect x="24" y="'+(y-12)+'" width="24" height="17" rx="4" fill="#F1EFE8" stroke="#C9CDCC"/><text x="36" y="'+(y+1)+'" fill="#5E5D59" font-size="10" text-anchor="middle" '+F+'>'+tag+'</text><text x="56" y="'+(y+2)+'" fill="#141413" font-size="13" '+F+'>'+name+'</text><rect x="168" y="'+(y-11)+'" width="84" height="20" rx="10" fill="'+bg+'"/><text x="210" y="'+(y+3)+'" fill="'+fg+'" font-size="11" text-anchor="middle" '+F+'>'+chip+'</text><circle cx="272" cy="'+(y-1)+'" r="7" fill="'+g+'"'+(dash?' stroke="#D9A93A" stroke-dasharray="2 2"':'')+'/>'}
-  return '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><rect x="10" y="8" width="280" height="188" rx="14" fill="#fff" stroke="#C9CDCC"/><text x="24" y="30" fill="#8A8F8E" font-size="10" letter-spacing="1" '+F+'>NAME</text><text x="176" y="30" fill="#8A8F8E" font-size="10" letter-spacing="1" '+F+'>COUNTRY</text><path d="M18 38H282" stroke="#E4E2DA"/>'
-   +row(62,'ع','سارة محمود','Sudan ✓','#DDEFD0','#2F6B14','#F7DCE8')+row(100,'EN','Ahmed Hassan','Egypt ✓','#DDEFD0','#2F6B14','#DCE9F8')+row(138,'EN','Omar Khaled','Same as…?','#FBEBC4','#7A5600','#DCE9F8')+row(176,'ع','نور سالم','Libya ✓','#DDEFD0','#2F6B14','#FBEBC4',1)+'</svg>'}
-function actArt(){
-  function ev(y,c,bg,sym,w1,w2,t){return '<circle cx="40" cy="'+y+'" r="15" fill="'+bg+'" stroke="'+c+'" stroke-width="2"/><text x="40" y="'+(y+5)+'" fill="'+c+'" font-size="14" font-weight="600" text-anchor="middle" '+F+'>'+sym+'</text><rect x="68" y="'+(y-14)+'" width="'+w1+'" height="10" rx="5" fill="#C9CDCC"/><rect x="68" y="'+(y+4)+'" width="'+w2+'" height="8" rx="4" fill="#E4E2DA"/><text x="276" y="'+(y-5)+'" fill="#8A8F8E" font-size="10" text-anchor="end" '+F+'>'+t+'</text>'}
-  return '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><rect x="10" y="8" width="280" height="188" rx="14" fill="#fff" stroke="#C9CDCC"/><path d="M40 30V170" stroke="#E4E2DA" stroke-width="3"/>'+ev(56,'#2F6B14','#DDEFD0','✓',130,90,'10:42')+ev(110,'#9B2C20','#F8D9D5','!',150,110,'10:15')+ev(164,'#1F5FA6','#DCE9F8','⇄',120,80,'09:05')+'<rect x="66" y="14" width="58" height="16" rx="8" fill="#F8D9D5"/><text x="95" y="26" fill="#9B2C20" font-size="10" font-weight="600" text-anchor="middle" '+F+'>3 repair</text></svg>'}
-function accArt(){
-  return '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="M70 22L116 38V82C116 112 96 132 70 142C44 132 24 112 24 82V38Z" fill="#DCE9F8" stroke="#0A5CA8" stroke-width="3"/><path d="M50 82l14 14 28-30" fill="none" stroke="#0A5CA8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><rect x="136" y="30" width="148" height="64" rx="12" fill="#fff" stroke="#C9CDCC"/><circle cx="162" cy="62" r="15" fill="#FBEBC4"/><text x="162" y="67" fill="#7A5600" font-size="13" font-weight="600" text-anchor="middle" '+F+'>K</text><text x="186" y="58" fill="#141413" font-size="12" font-weight="600" '+F+'>Dr. Karim</text><rect x="186" y="66" width="44" height="18" rx="9" fill="#DDEFD0"/><text x="208" y="79" fill="#2F6B14" font-size="10" text-anchor="middle" '+F+'>Approve</text><rect x="136" y="106" width="148" height="64" rx="12" fill="#fff" stroke="#C9CDCC"/><circle cx="162" cy="138" r="15" fill="#E5E1F8"/><text x="162" y="143" fill="#4B3FA6" font-size="13" font-weight="600" text-anchor="middle" '+F+'>M</text><text x="186" y="134" fill="#141413" font-size="12" font-weight="600" '+F+'>Dr. Mona</text><rect x="186" y="142" width="44" height="18" rx="9" fill="#DDEFD0"/><text x="208" y="155" fill="#2F6B14" font-size="10" text-anchor="middle" '+F+'>Approve</text></svg>'}
-function myArt(){
-  return '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><circle cx="150" cy="86" r="52" fill="#DCE9F8" stroke="#fff" stroke-width="5"/><text x="150" y="104" fill="#1F5FA6" font-size="52" font-weight="600" text-anchor="middle" '+F+'>S</text><rect x="104" y="150" width="92" height="30" rx="15" fill="#fff" stroke="#C9CDCC"/><text x="150" y="170" fill="#5E5D59" font-size="12" text-anchor="middle" '+F+'>Dr. Sara</text><g transform="translate(196 112)"><rect width="34" height="26" rx="6" fill="#0A5CA8"/><path d="M8 0V-8a9 9 0 0 1 18 0V0" fill="none" stroke="#0A5CA8" stroke-width="4"/><circle cx="17" cy="13" r="3.5" fill="#fff"/></g></svg>'}
-function cards(){
-  var c=[
-   {h:'calendar.html',t:'Calendar',s:S.cal,a:calArt(),k:'c-cal'},
-   {h:'hands-on.html',t:'Hands-on',s:S.hands,a:handsArt(),k:'c-hand'},
-   {h:'attendance.html',t:'Attendance',s:S.att,a:attArt(),k:'c-att'},
-   {h:'tools.html',t:'Tools',s:S.tools,a:toolsArt(),k:'c-tool',b:[S.rep+' need repair','s-bad']},
-   {h:'import.html',t:'Candidates',s:S.cand,a:candArt(),k:'c-cand',b:[S.rev+' to review','s-warn']}];
-  if(head)c.push({h:'activity.html',t:'Team activity',s:'What the team did today · 14 actions',a:actArt(),k:'c-act'},{h:'accounts.html',t:'Approvals',s:'Accounts waiting for a head to approve',a:accArt(),k:'c-acc',b:[S.pend+' waiting','s-warn']});
-  else c.push({h:'accounts.html',t:'My account',s:'Dr. Sara · member · change password',a:myArt(),k:'c-acc'});
-  $('hg').innerHTML=c.map(function(x){
-    return '<a class="hc '+x.k+'" href="'+x.h+'"><div class="hi">'+x.a+'</div>'+(x.b?'<span class="bd pl '+x.b[1]+'">'+x.b[0]+'</span>':'')+'<div class="hb"><p class="t">'+x.t+'<span class="go">Open ›</span></p><p class="s">'+x.s+'</p></div></a>'}).join('');
-  /* view-as removed */
-  $('who').textContent=head?'Dr. Ahmed · head':'Dr. Sara · member';
-  $('hi').textContent='Welcome, '+(head?'Dr. Ahmed':'Dr. Sara')}
-$('out').onclick=function(){session.logout()};
-ALX_install($('inst'),$('ip'));
-var S={cal:'Next: Basic Laparoscopic Surgery',hands:'Station planning',att:'Team check-in',tools:'Inventory',cand:'Import candidates',pend:0,rep:0,rev:0};
-(async function(){
-  try {
-    var courses=await api('/api/courses'); S.cal='Next: '+(courses.courses&&courses.courses.length?courses.courses[0].name:'none');
-    var tools=await api('/api/tools'); S.tools=(tools.tools||[]).length+' units';
-    var rc=await api('/api/tools/repair-count'); S.rep=rc.count||0;
-    var cands=await api('/api/candidates'); S.cand=(cands.candidates||[]).length+' candidates';
-    var users=await api('/api/users/pending'); S.pend=(users.users||[]).length;
-  } catch(e){}
+var head = session.isHead();
+var S = { cal: 'No course scheduled', hands: 'Station planning', att: 'Team check-in', tools: 'No tools yet', cand: 'Import candidates', act: 'What the team did', pend: 0, rep: 0 };
+var DATA = { courses: [], day: null, cands: [], att: [], people: {}, acts: [], pendUsers: [], country: {} };
+
+function $(i) { return document.getElementById(i); }
+function esc(x) { var e = document.createElement('div'); e.textContent = x == null ? '' : x; return e.innerHTML; }
+function fd(k) { var d = new Date(k + 'T00:00:00Z'); return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getUTCDay()] + ' ' + d.getUTCDate() + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getUTCMonth()] + ' ' + d.getUTCFullYear(); }
+var TYPE = { d12: '12 dry stations', dw: '6 dry + 6 wet', da: '6 dry + 6 animal', sh: 'Shift day', none: 'No hands-on' };
+var DEPCOL = { gen: '#FBE3D0', gyn: '#F7DCE8', endo: '#E5E1F8', brs: '#FAD4E0', ped: '#F6E8C3', uro: '#EBD9C5' };
+var DEPTX = { gen: '#8A3F12', gyn: '#8E2F5A', endo: '#4B3FA6', brs: '#A0123F', ped: '#7A5600', uro: '#5E3A14' };
+var MONTHS = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+function depOf(c) { return DEPCOL[c.dept] ? c.dept : 'gen'; }
+function clip(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+
+var F = 'font-family="system-ui,sans-serif"';
+function pill(x, y, w, t, bg, fg) { return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="18" rx="9" fill="' + bg + '"/><text x="' + (x + w / 2) + '" y="' + (y + 13) + '" fill="' + fg + '" font-size="11" text-anchor="middle" ' + F + '>' + t + '</text>'; }
+function emptyText(y, t) { return '<text x="150" y="' + y + '" fill="#8A8F8E" font-size="12" text-anchor="middle" ' + F + '>' + t + '</text>'; }
+
+function calArt() {
+  var now = new Date(), y = now.getFullYear(), m = now.getMonth();
+  var startDow = new Date(Date.UTC(y, m, 1)).getUTCDay();
+  var days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  var col = {}, today = now.getDate();
+  DATA.courses.forEach(function (c) {
+    var s = new Date(c.startDate + 'T00:00:00Z'), e = new Date(c.endDate + 'T00:00:00Z');
+    for (var d = new Date(s); d <= e; d.setUTCDate(d.getUTCDate() + 1)) {
+      if (d.getUTCFullYear() === y && d.getUTCMonth() === m) col[d.getUTCDate()] = depOf(c);
+    }
+  });
+  var wd = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  var s = '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g transform="rotate(-5 150 100)"><rect x="54" y="14" width="214" height="176" rx="12" fill="#EAF5F7" stroke="#B7D9DE"/></g><rect x="38" y="8" width="224" height="188" rx="12" fill="#fff" stroke="#C9CDCC"/><path d="M38 20a12 12 0 0 1 12-12h200a12 12 0 0 1 12 12v20H38z" fill="#1B8FA0"/><text x="250" y="30" fill="#fff" font-size="11" text-anchor="end" letter-spacing="1.5" ' + F + '>' + MONTHS[m] + ' ' + y + '</text>';
+  wd.forEach(function (d, i) { s += '<text x="' + (61 + i * 30.5) + '" y="55" fill="#8A8F8E" font-size="9" text-anchor="middle" ' + F + '>' + d + '</text>'; });
+  for (var d = 1; d <= days; d++) {
+    var i2 = startDow + d - 1;
+    var c = i2 % 7, r = Math.floor(i2 / 7), x = 48 + c * 30.5, yy = 62 + r * 25, k = col[d], tx = k === 'gyn' || k === 'brs' || k === 'endo' ? '#fff' : '#2A2A28';
+    s += (k ? '<rect x="' + x + '" y="' + yy + '" width="26" height="21" rx="6" fill="' + DEPCOL[k] + '"/>' : '') + (d === today ? '<rect x="' + x + '" y="' + yy + '" width="26" height="21" rx="6" fill="none" stroke="#141413" stroke-width="1.6"/>' : '') + '<text x="' + (x + 13) + '" y="' + (yy + 14) + '" fill="' + (k ? tx : '#555') + '" font-size="10" text-anchor="middle" ' + F + '>' + d + '</text>';
+  }
+  return s + '</svg>';
+}
+function handsArt() {
+  return '<svg viewBox="0 0 660 216" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><use href="#d" x="0" y="14" width="220" height="200"/><use href="#w" x="220" y="14" width="220" height="200"/><use href="#a" x="440" y="14" width="220" height="200"/>' + pill(80, 0, 60, 'Dry', '#D7F0EA', '#0B6B5B') + pill(300, 0, 60, 'Wet', '#FBE0CF', '#8A3F12') + pill(520, 0, 60, 'Animal', '#E5E1F8', '#4B3FA6') + '</svg>';
+}
+function avatar(x, y, t, bg, fg, ok) { return '<circle cx="' + x + '" cy="' + y + '" r="15" fill="' + bg + '" stroke="#fff" stroke-width="2.5"/><text x="' + x + '" y="' + (y + 5) + '" fill="' + fg + '" font-size="13" font-weight="600" text-anchor="middle" ' + F + '>' + t + '</text><circle cx="' + (x + 11) + '" cy="' + (y + 11) + '" r="6" fill="' + ok + '" stroke="#fff" stroke-width="1.5"/>'; }
+function attArt() {
+  var day = DATA.day || {};
+  var team = day.team || {};
+  var att = DATA.att || [];
+  var type = TYPE[day.type || 'none'] || 'No hands-on';
+  var tpill = type === 'Shift day' ? ['Wet', '#FBE0CF', '#8A3F12'] : type === '12 dry stations' ? ['Dry', '#D7F0EA', '#0B6B5B'] : type === 'No hands-on' ? ['Off', '#E4E2DA', '#5E5D59'] : ['Dry', '#D7F0EA', '#0B6B5B'];
+  function people(letter, y) {
+    var ids = Object.keys(team).filter(function (id) { return team[id] === letter; }).slice(0, 3);
+    if (!ids.length) return null;
+    return ids.map(function (id, i) {
+      var name = (DATA.people[id] || {}).name || '';
+      var a = att.filter(function (r) { return String(r.userId) === String(id); })[0];
+      var ok = !a ? '#C9CDCC' : a.state === 'absent' ? '#9B2C20' : a.state === 'late' ? '#EF9F27' : '#2F9E44';
+      var initial = (name.replace(/^Dr\.\s*/i, '').charAt(0) || '?').toUpperCase();
+      return avatar(38 + i * 34, y, initial, i === 0 ? '#DCE9F8' : i === 1 ? '#F7DCE8' : '#DDEFD0', '#1F5FA6', ok);
+    }).join('');
+  }
+  function panel(y, title, letter, sprite) {
+    var ppl = people(letter, y + 58);
+    return '<rect x="10" y="' + y + '" width="280" height="90" rx="14" fill="#fff" stroke="#C9CDCC"/>'
+      + '<text x="24" y="' + (y + 22) + '" fill="#141413" font-size="13" font-weight="600" ' + F + '>' + title + '</text>'
+      + pill(100, y + 9, 40, tpill[0], tpill[1], tpill[2])
+      + (ppl || emptyText(y + 60, 'Not assigned yet'))
+      + '<use href="#' + sprite + '" x="196" y="' + (y + 6) + '" width="86" height="78"/>';
+  }
+  return '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' + panel(8, 'Upper team', 'U', 'd') + panel(106, 'Lower team', 'L', 'w') + '</svg>';
+}
+function toolsArt() { return '<div class="tl3">' + toolSvg('grasper') + toolSvg('l0') + toolSvg('l30') + '</div>'; }
+function candArt() {
+  function row(y, tag, name, chip, bg, fg, g, dash) { return '<rect x="24" y="' + (y - 12) + '" width="24" height="17" rx="4" fill="#F1EFE8" stroke="#C9CDCC"/><text x="36" y="' + (y + 1) + '" fill="#5E5D59" font-size="10" text-anchor="middle" ' + F + '>' + tag + '</text><text x="56" y="' + (y + 2) + '" fill="#141413" font-size="12" ' + F + '>' + esc(clip(name, 18)) + '</text><rect x="168" y="' + (y - 11) + '" width="84" height="20" rx="10" fill="' + bg + '"/><text x="210" y="' + (y + 3) + '" fill="' + fg + '" font-size="10" text-anchor="middle" ' + F + '>' + esc(clip(chip, 13)) + '</text><circle cx="272" cy="' + (y - 1) + '" r="7" fill="' + g + '"' + (dash ? ' stroke="#D9A93A" stroke-dasharray="2 2"' : '') + '/>'; }
+  var list = DATA.cands.slice(0, 4);
+  var body = '';
+  if (!list.length) body = emptyText(110, 'No candidates yet');
+  list.forEach(function (c, i) {
+    var ar = /[\u0600-\u06FF]/.test(c.nameAr || '') && !c.nameEn;
+    var name = c.nameEn || c.nameAr || '';
+    var country = DATA.country[c.countryId] || '';
+    var chip = country ? country + ' ✓' : 'Added';
+    var bg = country ? '#DDEFD0' : '#FBEBC4', fg = country ? '#2F6B14' : '#7A5600';
+    var dot = c.gender === 'f' ? '#F7DCE8' : c.gender === 'm' ? '#DCE9F8' : '#FBEBC4';
+    body += row(62 + i * 38, ar ? 'ع' : 'EN', name, chip, bg, fg, dot, c.gender === 'u');
+  });
+  return '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><rect x="10" y="8" width="280" height="188" rx="14" fill="#fff" stroke="#C9CDCC"/><text x="24" y="30" fill="#8A8F8E" font-size="10" letter-spacing="1" ' + F + '>NAME</text><text x="176" y="30" fill="#8A8F8E" font-size="10" letter-spacing="1" ' + F + '>COUNTRY</text><path d="M18 38H282" stroke="#E4E2DA"/>' + body + '</svg>';
+}
+function actArt() {
+  var IC = { checkin: '✓', assign: '⇄', tool: '⚙', repair: '!', cand: '☰', acct: '☺', cal: '▦' };
+  var COL = { checkin: ['#2F6B14', '#DDEFD0'], assign: ['#1F5FA6', '#DCE9F8'], tool: ['#8A3F12', '#FBE0CF'], repair: ['#9B2C20', '#F8D9D5'], cand: ['#4B3FA6', '#E5E1F8'], acct: ['#7A5600', '#FBEBC4'], cal: ['#0B6B5B', '#D7F0EA'] };
+  function ev(y, c, bg, sym, label, who, t) { return '<circle cx="40" cy="' + y + '" r="15" fill="' + bg + '" stroke="' + c + '" stroke-width="2"/><text x="40" y="' + (y + 5) + '" fill="' + c + '" font-size="14" font-weight="600" text-anchor="middle" ' + F + '>' + sym + '</text><text x="66" y="' + (y - 2) + '" fill="#141413" font-size="11" ' + F + '>' + esc(clip(who, 20)) + '</text><text x="66" y="' + (y + 12) + '" fill="#8A8F8E" font-size="10" ' + F + '>' + esc(clip(label, 22)) + '</text><text x="276" y="' + (y - 2) + '" fill="#8A8F8E" font-size="10" text-anchor="end" ' + F + '>' + t + '</text>'; }
+  var list = DATA.acts.slice(0, 3), body = '';
+  if (!list.length) body = emptyText(110, 'Nothing recorded yet');
+  else body += '<path d="M40 30V170" stroke="#E4E2DA" stroke-width="3"/>';
+  list.forEach(function (e, i) {
+    var k = e.kind === 'repair' ? 'repair' : (COL[e.kind] ? e.kind : 'tool');
+    var c = COL[k];
+    var label = String(e.text || '').replace(/<[^>]+>/g, '');
+    body += ev(56 + i * 54, c[0], c[1], IC[k] || '•', label, e.by || '', e.time || '');
+  });
+  return '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><rect x="10" y="8" width="280" height="188" rx="14" fill="#fff" stroke="#C9CDCC"/>' + body + '</svg>';
+}
+function accArt() {
+  var shield = '<path d="M70 22L116 38V82C116 112 96 132 70 142C44 132 24 112 24 82V38Z" fill="#DCE9F8" stroke="#0A5CA8" stroke-width="3"/><path d="M50 82l14 14 28-30" fill="none" stroke="#0A5CA8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>';
+  var list = DATA.pendUsers.slice(0, 2), body = '';
+  if (!list.length) body = '<text x="196" y="86" fill="#8A8F8E" font-size="12" text-anchor="middle" ' + F + '>No account</text><text x="196" y="104" fill="#8A8F8E" font-size="12" text-anchor="middle" ' + F + '>is waiting</text>';
+  list.forEach(function (u, i) {
+    var y = 30 + i * 76;
+    var name = clip(u.name || u.username, 14);
+    var init = (String(u.name || u.username || '?').replace(/^Dr\.\s*/i, '').charAt(0) || '?').toUpperCase();
+    body += '<rect x="136" y="' + y + '" width="148" height="64" rx="12" fill="#fff" stroke="#C9CDCC"/><circle cx="162" cy="' + (y + 32) + '" r="15" fill="' + (i ? '#E5E1F8' : '#FBEBC4') + '"/><text x="162" y="' + (y + 37) + '" fill="' + (i ? '#4B3FA6' : '#7A5600') + '" font-size="13" font-weight="600" text-anchor="middle" ' + F + '>' + init + '</text><text x="186" y="' + (y + 28) + '" fill="#141413" font-size="12" font-weight="600" ' + F + '>' + esc(name) + '</text><rect x="186" y="' + (y + 36) + '" width="44" height="18" rx="9" fill="#DDEFD0"/><text x="208" y="' + (y + 49) + '" fill="#2F6B14" font-size="10" text-anchor="middle" ' + F + '>Approve</text>';
+  });
+  return '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' + shield + body + '</svg>';
+}
+function myArt() {
+  var u = session.user() || {};
+  var initial = (String(u.name || '?').replace(/^Dr\.\s*/i, '').charAt(0) || '?').toUpperCase();
+  return '<svg viewBox="0 0 300 204" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><circle cx="150" cy="86" r="52" fill="#DCE9F8" stroke="#fff" stroke-width="5"/><text x="150" y="104" fill="#1F5FA6" font-size="52" font-weight="600" text-anchor="middle" ' + F + '>' + initial + '</text><rect x="104" y="150" width="92" height="30" rx="15" fill="#fff" stroke="#C9CDCC"/><text x="150" y="170" fill="#5E5D59" font-size="12" text-anchor="middle" ' + F + '>Account</text><g transform="translate(196 112)"><rect width="34" height="26" rx="6" fill="#0A5CA8"/><path d="M8 0V-8a9 9 0 0 1 18 0V0" fill="none" stroke="#0A5CA8" stroke-width="4"/><circle cx="17" cy="13" r="3.5" fill="#fff"/></g></svg>';
+}
+
+function cards() {
+  var c = [
+    { h: '/calendar', t: 'Calendar', s: S.cal, a: calArt(), k: 'c-cal' },
+    { h: '/hands-on', t: 'Hands-on', s: S.hands, a: handsArt(), k: 'c-hand' },
+    { h: '/attendance', t: 'Attendance', s: S.att, a: attArt(), k: 'c-att' },
+    { h: '/tools', t: 'Tools', s: S.tools, a: toolsArt(), k: 'c-tool', b: S.rep ? [S.rep + ' need repair', 's-bad'] : null },
+    { h: '/candidates', t: 'Candidates', s: S.cand, a: candArt(), k: 'c-cand' }
+  ];
+  if (head) c.push({ h: '/activity', t: 'Team activity', s: S.act, a: actArt(), k: 'c-act' }, { h: '/account', t: 'Approvals', s: S.pend ? 'Accounts waiting for a head to approve' : 'No account is waiting', a: accArt(), k: 'c-acc', b: S.pend ? [S.pend + ' waiting', 's-warn'] : null });
+  else c.push({ h: '/account', t: 'My account', s: 'Change your password and install the app', a: myArt(), k: 'c-acc' });
+  $('hg').innerHTML = c.map(function (x) {
+    return '<a class="hc ' + x.k + '" href="' + x.h + '"><div class="hi">' + x.a + '</div>' + (x.b ? '<span class="bd pl ' + x.b[1] + '">' + x.b[0] + '</span>' : '') + '<div class="hb"><p class="t">' + x.t + '<span class="go">Open ›</span></p><p class="s" dir="auto">' + esc(x.s) + '</p></div></a>';
+  }).join('');
+}
+
+function setWho() {
+  var u = session.user();
+  if (!u) return;
+  $('who').textContent = u.name + ' · ' + u.role;
+  $('hi').textContent = 'Welcome, ' + u.name;
+  $('dateLine').textContent = 'ALEXEA Course Manager · ' + fd(new Date().toISOString().slice(0, 10));
+}
+
+$('out').onclick = function () { session.logout(); };
+ALX_install($('inst'), $('ip'));
+
+(async function () {
+  if (!session.requireAuth()) return;
+  setWho();
+  cards();
+  var today = new Date().toISOString().slice(0, 10);
+  var job = [];
+
+  job.push(api('/api/courses').then(function (d) {
+    DATA.courses = d.courses || [];
+    var cs = DATA.courses.filter(function (c) { return c.endDate >= today; }).sort(function (a, b) { return a.startDate < b.startDate ? -1 : 1; });
+    var c = cs[0];
+    if (!c) { S.cal = 'No course scheduled'; return; }
+    var days = Math.round((new Date(c.startDate + 'T00:00:00Z') - new Date(today + 'T00:00:00Z')) / 864e5);
+    S.cal = 'Next: ' + c.name + (days > 0 ? ' · in ' + days + ' day' + (days > 1 ? 's' : '') : ' · running now');
+  }).catch(function () {}));
+
+  job.push(api('/api/users').then(function (d) {
+    (d.users || []).forEach(function (u) { DATA.people[u.id] = u; });
+  }).catch(function () {}));
+
+  job.push(api('/api/places?type=country').then(function (d) {
+    (d.places || []).forEach(function (p) { DATA.country[String(p._id)] = p.canonicalEn || p.canonicalAr || ''; });
+  }).catch(function () {}));
+
+  job.push(api('/api/courses/active-day').then(function (d) {
+    if (!d || !d.day) { S.hands = 'No course day yet'; S.att = 'No course today'; return; }
+    var day = d.day;
+    DATA.day = day;
+    var type = day.type || 'none';
+    var names = day.candidates || [];
+    S.hands = 'Day ' + (day.index || 1) + ' · ' + (TYPE[type] || 'No hands-on') + (names.length ? ' · ' + names.length + ' candidates' : '');
+    return Promise.all([
+      api('/api/attendance?courseDayId=' + day._id).then(function (a) {
+        DATA.att = a.attendance || [];
+        var present = DATA.att.filter(function (r) { return r.state === 'present' || r.state === 'late'; }).length;
+        var late = DATA.att.filter(function (r) { return r.state === 'late'; }).length;
+        S.att = present + ' on site' + (late ? ' · ' + late + ' late' : '');
+      }).catch(function () {}),
+      api('/api/candidates?courseId=' + day.courseId).then(function (c) {
+        DATA.cands = c.candidates || [];
+        S.cand = DATA.cands.length ? DATA.cands.length + ' candidate' + (DATA.cands.length === 1 ? '' : 's') + ' added' : 'No candidates yet';
+      }).catch(function () {})
+    ]);
+  }).catch(function () {}));
+
+  job.push(api('/api/tools').then(function (d) {
+    var t = d.tools || [];
+    var inuse = t.filter(function (x) { return x.status === 'inuse'; }).length;
+    S.tools = t.length ? t.length + ' unit' + (t.length === 1 ? '' : 's') + ' · ' + inuse + ' in use' : 'No tools yet';
+  }).catch(function () {}));
+
+  job.push(api('/api/tools/repair-count').then(function (d) { S.rep = d.count || 0; }).catch(function () {}));
+
+  if (head) {
+    job.push(api('/api/users/team').then(function (d) {
+      var us = d.users || [];
+      DATA.pendUsers = us.filter(function (x) { return x.status === 'pending'; });
+      S.pend = DATA.pendUsers.length;
+    }).catch(function () {}));
+    job.push(api('/api/activity').then(function (d) {
+      DATA.acts = d.entries || [];
+      S.act = DATA.acts.length ? DATA.acts.length + ' action' + (DATA.acts.length === 1 ? '' : 's') + ' recorded' : 'Nothing recorded yet';
+    }).catch(function () {}));
+  }
+
+  await Promise.all(job);
   cards();
 })();
 </script>
 </body>
 </html>
-
-

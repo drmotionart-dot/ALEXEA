@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add candidates · ALEXEA Course Manager</title>
+<link rel="stylesheet" href="shared.css">
+<!--
+  Candidate import (paste, CSV/Excel, PDF, typed photo) and the review screen.
+  Layout and labels match the design source of truth. Nothing is saved until a head presses Confirm.
+  Real matching is done by the server: /api/match/batch (normalization, sound keys, fuzzy match,
+  0.90 / 0.70 thresholds, hierarchy city -> country, alias learning). Paste column order:
+  Name, Country, City, Hospital, Experience (years).
+-->
+<style>
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.rv{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.rv.ph{grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr)}
+@media(max-width:700px){.rv.ph{grid-template-columns:minmax(0,1fr)}}
+.photo{background:var(--surface-2);border:.5px dashed var(--border-strong);border-radius:12px;min-height:160px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;font-size:13px;color:var(--text-2);overflow:hidden}
+.photo img{max-width:100%;max-height:420px;border-radius:8px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+th{font-weight:500;color:var(--text-2);text-align:left;padding:4px 8px;font-size:12px}
+td{padding:6px 8px;border-top:.5px solid var(--border);vertical-align:top}
+td input,td select{padding:4px 6px;font-size:13px;width:100%}
+td input.exp{width:60px}
+.cell .raw{display:block;margin-bottom:3px}
+.ch{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap}
+.ch button{padding:1px 8px;font-size:12px}
+.gq{background:var(--bg-warn);border:.5px dashed var(--border-warn)}
+.cn{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#003C7E">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<script src="js/config.js"></script><script src="js/api.js"></script><script src="js/session.js"></script></head>
+<body>
+<div class="wrap">
+<header class="top">
+  <a class="hl" href="/home" aria-label="Home"><div class="logo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><span class="brand">ALEXEA Course Manager</span></a>
+  <nav class="nav"><a href="/home">Home</a><a href="/calendar">Calendar</a><a href="/hands-on">Hands-on</a><a href="/attendance">Attendance</a><a href="/tools">Tools</a><a class="cur" href="/candidates">Candidates</a><a href="/activity">Activity</a><a href="/account">Account</a></nav>
+</header>
+<div class="hero"><h1>Add candidates</h1><p id="heroSub">Candidates fill in the sheet themselves, in Arabic or English. Heads review before anything is saved.</p></div>
+<div class="stps" id="stps"></div>
+<div id="s1">
+  <div class="tabs"><button data-m="paste" class="on">Paste a table</button><button data-m="file">CSV or Excel</button><button data-m="pdf">PDF</button><button data-m="photo">Photo</button></div>
+  <div id="in"></div>
+</div>
+<div id="s2" style="display:none"></div>
+</div>
+<script src="install.js"></script>
+<script>
+var mode='paste', rows=[], fileName='', fileText='', photoUrl='', rawFile=null;
+var course=null, courseId='', placesAll=[], placeById={}, egyptId='';
+var RET={m:/[\u0600-\u06FF]/,ar:/[\u0600-\u06FF]/};
+var MSG={file:'Choose a CSV or Excel file',pdf:'Choose a PDF (selectable text is read exactly, no OCR)',photo:'Take or choose a photo of the typed table'};
+
+function $(i){return document.getElementById(i)}
+function esc(x){var e=document.createElement('div');e.textContent=x==null?'':x;return e.innerHTML}
+function steps(n){var s=['Add','Review','Saved'];$('stps').innerHTML=s.map(function(t,i){return '<div class="s'+(i+1==n?' on':i+1<n?' done':'')+'"><b>'+(i+1<n?'✓':i+1)+'</b>'+t+'</div>'}).join('')}
+function raw(t){if(!t)return '<span class="raw nt">empty</span>';var ar=/[\u0600-\u06FF]/.test(t);return '<span class="raw"><span class="sc">'+(ar?'ع':'EN')+'</span><span dir="auto">'+esc(t)+'</span></span>'}
+function fd(k){if(!k)return '';var d=new Date(k+'T00:00:00Z');return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getUTCDay()]+' '+d.getUTCDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()]+' '+d.getUTCFullYear()}
+function norm(s){s=(s||'').toLowerCase().replace(/[\u064B-\u0652\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه');return s.split(/\s+/).filter(function(w){return w&&!/^(hospital|university|center|centre|مستشفي|المستشفي|جامعة|الجامعي)$/.test(w)}).join(' ')}
+
+/* ---------- input screen ---------- */
+function input(){
+  steps(1);
+  var h='';
+  if(mode=='paste'){
+    h='<textarea id="ta" rows="7" dir="auto" placeholder="Paste the table here">'+esc(fileText)+'</textarea>'
+      +'<p class="nt" style="margin:6px 0">Order: Name, Country, City, Hospital, Experience (years). Copy from Excel, a Google Form export or WhatsApp.</p>'
+      +'<div class="row"><button class="pri" id="rd">Analyze</button></div>';
+  } else {
+    var acc=mode=='photo'?'accept="image/*" capture="environment"':(mode=='pdf'?'accept="application/pdf,.pdf"':'accept=".csv,.txt,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"');
+    h='<div class="box"><div class="row" style="margin:0"><button id="pick">'+MSG[mode]+'</button><input type="file" id="fl" style="display:none" '+acc+'><span class="nt" id="fn">'+esc(fileName)+'</span></div>'
+      +'<p class="nt" style="margin-top:8px">'+(mode=='photo'?'The photo is read with OCR. Typed sheets only; handwriting is not supported. ':'')+'The file is read before anything is saved, and you review the real result on the next screen.</p>'
+      +(photoUrl?'<div class="photo" style="min-height:0"><img src="'+photoUrl+'" alt="Uploaded sheet"></div>':'')
+      +'</div><div class="row"><button class="pri" id="rd">Analyze</button></div>';
+  }
+  h+='<p class="er" id="ie" style="display:none"></p>';
+  $('in').innerHTML=h;
+  document.querySelectorAll('.tabs button').forEach(function(b){b.className=b.dataset.m==mode?'on':''});
+}
+
+/* ---------- file reading ---------- */
+function loadScript(src){
+  return new Promise(function(resolve,reject){
+    if(document.querySelector('script[src="'+src+'"]'))return resolve();
+    var s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=function(){reject(new Error('Could not load '+src))};document.head.appendChild(s);
+  });
+}
+function readAsText(file){return new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(){res(String(fr.result||''))};fr.onerror=rej;fr.readAsText(file,'utf-8')})}
+function readAsDataUrl(file){return new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(){res(String(fr.result||''))};fr.onerror=rej;fr.readAsDataURL(file)})}
+function readAsArray(file){return new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(){res(new Uint8Array(fr.result))};fr.onerror=rej;fr.readAsArrayBuffer(file)})}
+
+function compressImage(file){
+  return new Promise(function(resolve,reject){
+    var img=new Image();
+    img.onload=function(){
+      var max=1800,w=img.width,h=img.height;
+      if(w>max||h>max){var s=Math.min(max/w,max/h);w=Math.round(w*s);h=Math.round(h*s)}
+      var cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(cv.toDataURL('image/jpeg',0.85));
+    };
+    img.onerror=function(){reject(new Error('That file is not an image.'))};
+    img.src=URL.createObjectURL(file);
+  });
+}
+async function ocrDataUrl(dataUrl){
+  var r=await api('/api/analyze',{method:'POST',body:JSON.stringify({file:dataUrl})});
+  return r.text||'';
+}
+async function extractPdfText(file){
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+  if(!window.pdfjsLib)throw new Error('PDF reader not available');
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  var data=await readAsArray(file);
+  var pdf=await window.pdfjsLib.getDocument({data:data}).promise;
+  var out=[];
+  for(var p=1;p<=pdf.numPages;p++){
+    var pg=await pdf.getPage(p), tc=await pg.getTextContent();
+    var lastY=null,line='';
+    tc.items.forEach(function(it){
+      var y=it.transform[5];
+      if(lastY!==null&&Math.abs(y-lastY)>3){if(line.trim())out.push(line.trim());line=''}
+      line+=it.str+' ';lastY=y;
+    });
+    if(line.trim())out.push(line.trim());
+  }
+  return out.join('\n');
+}
+async function readFile(file){
+  var name=(file.name||'').toLowerCase();
+  if(/\.(xlsx|xls)$/.test(name)){
+    await loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+    if(!window.XLSX)throw new Error('Excel reader not available');
+    var arr=await readAsArray(file);
+    var wb=window.XLSX.read(arr,{type:'array'});
+    var first=wb.SheetNames[0];
+    return window.XLSX.utils.sheet_to_csv(wb.Sheets[first],{FS:'\t',blankrows:false});
+  }
+  if(/\.pdf$/.test(name)){
+    var t='';
+    try{t=await extractPdfText(file)}catch(e){t=''}
+    if(t.replace(/\s/g,'').length>40)return t;
+    var url=await readAsDataUrl(file);
+    return ocrDataUrl(url);
+  }
+  if(file.type&&/^image\//.test(file.type)||/\.(png|jpe?g|webp|heic|bmp|gif)$/.test(name)){
+    var img=await compressImage(file);
+    photoUrl=img;
+    return ocrDataUrl(img);
+  }
+  return readAsText(file);
+}
+
+/* ---------- parse text into rows ---------- */
+function splitCsv(line){
+  var out=[],cur='',q=false;
+  for(var i=0;i<line.length;i++){
+    var ch=line[i];
+    if(ch=='"'){ if(q&&line[i+1]=='"'){cur+='"';i++} else q=!q; }
+    else if(!q&&(ch=='\t'||ch==';'||ch==',')){out.push(cur);cur=''}
+    else cur+=ch;
+  }
+  out.push(cur);
+  // a semicolon or comma may also appear inside Arabic text; trim each cell
+  return out.map(function(x){return String(x).trim()});
+}
+function parseText(text){
+  var lines=String(text||'').split(/\r?\n/).map(function(l){return l.trim()}).filter(Boolean);
+  if(!lines.length)return [];
+  // drop a header row such as Name / Country / City ...
+  if(lines.length>1&&/^(name|full name|اسم|country|city|hospital)/i.test(lines[0])&&!/\d{4}/.test(lines[0]))lines=lines.slice(1);
+  return lines.map(function(l){
+    var c=splitCsv(l);
+    return {
+      name:c[0]||'', raw:{co:c[1]||'',ci:c[2]||'',ho:c[3]||''}, exp:c[4]||'',
+      g:'u', co:{k:'none'}, ci:{k:'none'}, ho:{k:'none'}
+    };
+  }).filter(function(r){return r.name||r.raw.co});
+}
+
+/* ---------- matching ---------- */
+function cellFromResult(result,rawVal){
+  rawVal=(rawVal||'').trim();
+  if(!rawVal)return {k:'none',v:'',raw:''};
+  var m=result&&result.match;
+  if(result&&result.action==='match'&&m)return {k:'ok',id:m.id,v:m.name,raw:rawVal};
+  if(result&&result.action==='confirm'&&m)return {k:'sug',id:m.id,v:m.name,raw:rawVal};
+  return {k:'new',v:rawVal,raw:rawVal};
+}
+async function matchRows(list){
+  var items=[];
+  list.forEach(function(r,i){
+    if(r.raw.co)items.push({key:i+':co',type:'country',raw:r.raw.co});
+    if(r.raw.ci)items.push({key:i+':ci',type:'city',raw:r.raw.ci});
+    if(r.raw.ho)items.push({key:i+':ho',type:'hospital',raw:r.raw.ho});
+  });
+  var res=items.length?await api('/api/match/batch',{method:'POST',body:JSON.stringify({items:items})}):{results:{}};
+  var R=res.results||{};
+  list.forEach(function(r,i){
+    r.co=cellFromResult(R[i+':co'],r.raw.co);
+    r.ci=cellFromResult(R[i+':ci'],r.raw.ci);
+    r.ho=cellFromResult(R[i+':ho'],r.raw.ho);
+  });
+  // a resolved city implies its country
+  list.forEach(function(r){
+    if((r.co.k==='none'||r.co.k==='new')&&r.ci.id){
+      var city=placeById[r.ci.id], cid=city&&city.parentId;
+      if(cid){
+        var c=placeById[cid];
+        r.co={k:'ok',id:cid,v:(c&&(c.canonicalEn||c.canonicalAr))||'',via:1,raw:r.raw.co};
+      }
+    }
+  });
+  // gender from the server name list
+  var names={};
+  list.forEach(function(r){var f=(r.name||'').trim().split(/\s+/)[0];if(f)names[f]=1});
+  var unique=Object.keys(names);
+  var results=await Promise.all(unique.map(function(n){
+    return api('/api/names/gender?name='+encodeURIComponent(n)).then(function(x){return x.gender||'u'}).catch(function(){return 'u'});
+  }));
+  var gm={};unique.forEach(function(n,i){gm[n]=results[i]});
+  list.forEach(function(r){
+    var f=(r.name||'').trim().split(/\s+/)[0];
+    var g=gm[f]||'u';
+    r.g=(g==='m'||g==='f')?g:'u';
+  });
+}
+
+/* ---------- review ---------- */
+function chip(r,key){
+  var x=r[key]||{k:'none'};
+  if(x.k==='none')return '<span class="pl s-mut">Missing</span>';
+  if(x.k==='ok')return '<span class="pl s-ok">'+esc(x.v)+(x.via?' (from city)':'')+'</span>';
+  if(x.k==='sug')return '<span class="ch"><span class="pl s-warn">Same as '+esc(x.v)+'?</span><button data-y="'+key+'" data-i="'+rows.indexOf(r)+'">Yes</button><button data-n="'+key+'" data-i="'+rows.indexOf(r)+'">No</button></span>';
+  return '<span class="pl s-acc">New: '+esc(x.v)+'</span>';
+}
+function review(){
+  var todo=0;rows.forEach(function(r){['co','ci','ho'].forEach(function(k){if(r[k]&&r[k].k==='sug')todo++});if(r.g==='u')todo++});
+  var st={ok:0,sug:0,nw:0,gu:0};
+  rows.forEach(function(r){
+    ['co','ci','ho'].forEach(function(k){var x=r[k]&&r[k].k;if(x==='ok')st.ok++;else if(x==='sug')st.sug++;else if(x==='new')st.nw++});
+    if(r.g==='u')st.gu++;
+  });
+  var h='<div class="cnt"><div class="c"><b>'+rows.length+'</b><span>Candidates</span></div><div class="c"><b>'+st.ok+'</b><span>Matched</span></div><div class="c"><b>'+st.sug+'</b><span>Same as…? to confirm</span></div><div class="c"><b>'+st.nw+'</b><span>New places</span></div><div class="c"><b>'+st.gu+'</b><span>Gender unknown</span></div></div>'
+    +'<div class="rv'+(mode==='photo'?' ph':'')+'">'
+    +(mode==='photo'?'<div class="photo">'+(photoUrl?'<img src="'+photoUrl+'" alt="Uploaded sheet">':'Original photo shown here, beside the rows. Uncertain cells are highlighted.')+'</div>':'')
+    +'<div class="tw"><table><thead><tr><th>Name</th><th>Gender</th><th>Country</th><th>City</th><th>Hospital</th><th>Years</th><th></th></tr></thead><tbody>';
+  rows.forEach(function(r,i){
+    h+='<tr><td><input dir="auto" data-nm="'+i+'" value="'+esc(r.name)+'"></td>'
+      +'<td><select data-g="'+i+'" class="'+(r.g==='u'?'gq':'')+'"><option value="m"'+(r.g==='m'?' selected':'')+'>Male</option><option value="f"'+(r.g==='f'?' selected':'')+'>Female</option><option value="u"'+(r.g==='u'?' selected':'')+'>? Unknown</option></select></td>'
+      +'<td class="cell">'+raw(r.raw.co)+chip(r,'co')+(r.co&&r.co.v&&!/^egypt$/i.test(norm(r.co.v))&&r.co.k!=='sug'?' <span class="pl s-mut">Non-Egyptian</span>':'')+'</td>'
+      +'<td class="cell">'+raw(r.raw.ci)+chip(r,'ci')+'</td>'
+      +'<td class="cell">'+raw(r.raw.ho)+chip(r,'ho')+'</td>'
+      +'<td><input class="exp" data-ex="'+i+'" value="'+esc(r.exp)+'" inputmode="numeric"></td>'
+      +'<td><button data-rm="'+i+'" aria-label="Remove row">Remove</button></td></tr>';
+  });
+  h+='</tbody></table></div></div>'
+    +'<div class="cn"><button class="pri" id="cf">Confirm and save '+rows.length+' candidates</button><button id="bk">Back</button>'
+    +(todo?'<span class="pl s-warn">'+todo+' to review</span>':'<span class="pl s-ok">All matched</span>')+'</div>'
+    +'<p class="er" id="ce" style="display:none"></p><p class="nt">A confirmed match is remembered, so the same spelling is never asked again.</p><p class="ok" id="cs" style="display:none"></p>';
+  $('s2').innerHTML=h;
+}
+function go(){$('s1').style.display='none';$('s2').style.display='block';steps(2);review()}
+
+/* ---------- analyze ---------- */
+async function analyze(){
+  var ie=$('ie');
+  if(ie){ie.style.display='none'}
+  var text='';
+  try{
+    if(mode==='paste'){
+      text=($('ta').value||'').trim();
+      if(!text)throw new Error('Paste a table first.');
+    }else{
+      if(!rawFile)throw new Error('Choose a file first.');
+      text=await readFile(rawFile);
+      if(!String(text||'').trim())throw new Error('The file could not be read. Try a sharper photo or a smaller PDF.');
+    }
+    fileText=text;
+    rows=parseText(text);
+    if(!rows.length)throw new Error('No candidate rows were found. Check that each line is Name, Country, City, Hospital, Years.');
+    await matchRows(rows);
+    go();
+  }catch(ex){
+    var err=$('ie')||$('ce');
+    if(err){err.textContent=ex.message||String(ex);err.style.display='block'}
+  }
+}
+
+/* ---------- save ---------- */
+function isArabic(s){return /[\u0600-\u06FF]/.test(s||'')}
+async function resolvePlace(cell,type,parentId,rawText){
+  rawText=(rawText||'').trim();
+  if(!rawText)return '';
+  if((cell.k==='ok'||cell.k==='sug')&&cell.id){
+    if(cell.wasSug){
+      try{await api('/api/places/'+cell.id+'/aliases',{method:'POST',body:JSON.stringify({alias:rawText})})}catch(e){}
+    }
+    return cell.id;
+  }
+  var body={type:type,canonicalEn:isArabic(rawText)?'':rawText,canonicalAr:isArabic(rawText)?rawText:''};
+  if(!body.canonicalEn&&!body.canonicalAr)body.canonicalEn=rawText;
+  if(parentId)body.parentId=parentId;
+  var r=await api('/api/places',{method:'POST',body:JSON.stringify(body)});
+  return r.id||'';
+}
+async function saveAll(){
+  var ce=$('ce'), cs=$('cs');
+  if(ce){ce.style.display='none'}
+  if(cs){cs.style.display='none'}
+  var open=0;
+  rows.forEach(function(r){
+    ['co','ci','ho'].forEach(function(k){if(r[k]&&r[k].k==='sug')open++});
+    if(r.g==='u')open++;
+  });
+  if(open){
+    if(ce){ce.textContent='Resolve the '+open+' amber item'+(open>1?'s':'')+' first: confirm each match and set unknown genders.';ce.style.display='block'}
+    return;
+  }
+  var btn=$('cf'); if(btn)btn.disabled=true;
+  try{
+    var items=[];
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i];
+      var coId=await resolvePlace(r.co,'country','',r.raw.co);
+      var ciId=await resolvePlace(r.ci,'city',coId,r.raw.ci);
+      var hoId=await resolvePlace(r.ho,'hospital',ciId,r.raw.ho);
+      var cname=(r.co&&r.co.v)||r.raw.co||'';
+      var eg=/^egypt$/i.test(norm(cname))||/مصر/.test(cname);
+      items.push({
+        courseId:courseId,
+        nameEn:r.name,
+        nameAr:isArabic(r.name)?r.name:'',
+        gender:r.g,
+        countryId:coId,cityId:ciId,hospitalId:hoId,
+        experienceYears:Number(r.exp)||0,
+        isEgyptian:!!eg,
+        raw:{name:r.name,country:r.raw.co,city:r.raw.ci,hospital:r.raw.ho}
+      });
+    }
+    await api('/api/candidates/bulk',{method:'POST',body:JSON.stringify({items:items})});
+    if(cs){cs.innerHTML=rows.length+' candidates saved. <a class="btn" href="/hands-on">Open the hands-on page</a>';cs.style.display='block'}
+    steps(3);
+    if(btn)btn.style.display='none';
+  }catch(ex){
+    if(ce){ce.textContent=ex.message||String(ex);ce.style.display='block'}
+    if(btn)btn.disabled=false;
+  }
+}
+
+/* ---------- events ---------- */
+$('in').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  if(b.id==='pick'){$('fl').click();return}
+  if(b.id==='rd'){b.disabled=true;analyze().finally(function(){b.disabled=false});return}
+});
+$('in').addEventListener('change',function(e){
+  if(e.target.id==='fl'&&e.target.files[0]){
+    rawFile=e.target.files[0];
+    fileName=rawFile.name;
+    photoUrl='';
+    if(/^image\//.test(rawFile.type||'')){compressImage(rawFile).then(function(u){photoUrl=u;input()}).catch(function(){})}
+    var fn=$('fn');if(fn)fn.textContent=fileName;
+  }
+});
+document.querySelector('.tabs').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  if(b.dataset.m!==mode){mode=b.dataset.m;rawFile=null;fileName='';photoUrl='';fileText=''}
+  input();
+});
+$('s2').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  if(b.dataset.y){var r=rows[+b.dataset.i],k=b.dataset.y;r[k]={k:'ok',id:r[k].id,v:r[k].v,raw:r[k].raw,wasSug:true};review();return}
+  if(b.dataset.n){var r2=rows[+b.dataset.i],k2=b.dataset.n;r2[k2]={k:'new',v:r2.raw[k2],raw:r2.raw[k2]};review();return}
+  if(b.dataset.rm){rows.splice(+b.dataset.rm,1);review();return}
+  if(b.id==='bk'){$('s2').style.display='none';$('s1').style.display='block';steps(1);return}
+  if(b.id==='cf'){saveAll();return}
+});
+$('s2').addEventListener('change',function(e){
+  var t=e.target;
+  if(t.dataset.g){rows[+t.dataset.g].g=t.value;review()}
+  if(t.dataset.nm)rows[+t.dataset.nm].name=t.value;
+  if(t.dataset.ex)rows[+t.dataset.ex].exp=t.value;
+});
+$('s2').addEventListener('input',function(e){
+  var t=e.target;
+  if(t.dataset.nm)rows[+t.dataset.nm].name=t.value;
+  if(t.dataset.ex)rows[+t.dataset.ex].exp=t.value;
+});
+
+/* ---------- boot ---------- */
+(async function(){
+  if(!session.requireAuth())return;
+  if(!session.isHead()){
+    $('s1').innerHTML='<div class="box none"><h3 class="sh" style="margin-top:0">Only heads can add candidates</h3><p class="nt">Ask a head if you need someone added.</p><a class="btn" href="/home" style="margin-top:10px">Back to Home</a></div>';
+    $('stps').innerHTML='';
+    return;
+  }
+  try{
+    var p=await api('/api/places');
+    placesAll=p.places||[];
+    placesAll.forEach(function(x){placeById[String(x._id)]=x});
+    placesAll.forEach(function(x){
+      if(x.type==='country'&&(/^egypt$/i.test(x.canonicalEn||'')||/مصر/.test(x.canonicalAr||'')))egyptId=String(x._id);
+    });
+  }catch(e){}
+  try{
+    var d=await api('/api/courses/active-day');
+    if(d&&d.day){course=d.course;courseId=String(d.day.courseId);}
+  }catch(e){}
+  if(!courseId){
+    try{
+      var c=await api('/api/courses');
+      var cs=(c.courses||[]).filter(function(x){return x.endDate>=new Date().toISOString().slice(0,10)}).sort(function(a,b){return a.startDate<b.startDate?-1:1});
+      if(cs[0]){course=cs[0];courseId=String(cs[0]._id)}
+    }catch(e){}
+  }
+  if(course){
+    $('heroSub').innerHTML='<span dir="auto">'+esc(course.name)+'</span> · '+fd(course.startDate)+'. Candidates fill in the sheet themselves, in Arabic or English. Heads review before anything is saved.';
+  }
+  if(!courseId){
+    $('heroSub').textContent='There is no course to add candidates to. Create a course first in the Calendar.';
+    $('s1').style.display='none';
+    return;
+  }
+  input();
+  if(!placesAll.length){
+    var ie=$('ie'); if(ie){ie.textContent='No places are stored yet. New country, city and hospital names are created when you confirm.';ie.style.display='block'}
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Account · ALEXEA Course Manager</title>
+<link rel="stylesheet" href="shared.css">
+<!--
+  DESIGN SOURCE OF TRUTH: log in, create account, waiting-for-approval, and the heads' approvals screen.
+  Match exactly. Do not restyle. Rules: sign-up creates a PENDING account; only ACTIVE users can log in;
+  heads approve or reject and can reset a member's password.
+-->
+<style>
+.card{max-width:420px;margin:0 auto 12px}
+.fld{display:block;margin:0 0 10px;font-size:13px;color:var(--text-2)}
+.fld input{display:block;width:100%;margin-top:4px;color:var(--text)}
+.pw{display:flex;gap:6px}
+.pw input{flex:1;margin-top:4px}
+.pw button{margin-top:4px}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.ur{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface-2);border-radius:10px;padding:8px 12px;margin:0 0 6px}
+.ur .n{flex:1;min-width:140px;font-size:14px}
+.ur .u{font-size:12px;color:var(--text-2);font-family:ui-monospace,Menlo,Consolas,monospace}
+.tmp{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--bg-warn);color:var(--text-warn);border-radius:6px;padding:2px 8px;font-size:13px}
+.big{text-align:center;padding:18px 8px}
+.big .ic{width:44px;height:44px;border-radius:50%;background:var(--bg-warn);color:var(--text-warn);display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:8px}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#003C7E">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<script src="js/config.js"></script><script src="js/api.js"></script><script src="js/session.js"></script></head>
+<body>
+<div class="wrap">
+<header class="top">
+  <a class="hl" href="/home" aria-label="Home"><div class="logo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><span class="brand">ALEXEA Course Manager</span></a>
+  <nav class="nav"><a href="/home">Home</a><a href="/calendar">Calendar</a><a href="/hands-on">Hands-on</a><a href="/attendance">Attendance</a><a href="/tools">Tools</a><a href="/candidates">Candidates</a><a href="/activity">Activity</a><a class="cur" href="/account">Account</a></nav>
+</header>
+
+<div id="v"></div>
+</div>
+<script src="install.js"></script>
+<script>
+var scr = 'login', showPw = false, msg = '', tmp = {}, signed = null, cpmsg = '', allUsers = [], stats = { pending: 0, active: 0, loaded: false }, loginPw = '';
+function $(i) { return document.getElementById(i); }
+function ini(n) { return (n || '?').replace(/^Dr\.\s*/i, '').charAt(0).toUpperCase(); }
+function esc(x) { var e = document.createElement('div'); e.textContent = x == null ? '' : x; return e.innerHTML; }
+function brand(t, s) { return '<div class="hero"><div class="lgo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><h1>' + t + '</h1><p>' + s + '</p></div>'; }
+function pwField(id, label, ph) { return '<label class="fld">' + label + '<div class="pw"><input id="' + id + '" type="' + (showPw ? 'text' : 'password') + '" placeholder="' + ph + '" autocomplete="off"><button type="button" data-pw="1">' + (showPw ? 'Hide' : 'Show') + '</button></div></label>'; }
+function err(id, t) { var e = $(id); if (!e) return; e.textContent = t; e.style.display = 'block'; }
+function clearErr(id) { var e = $(id); if (e) { e.textContent = ''; e.style.display = 'none'; } }
+
+/* ---------- views ---------- */
+function view() {
+  var u = session.user();
+  var h = '';
+  if (scr === 'myacct' || scr === 'change') {
+    if (!u) { scr = 'login'; return view(); }
+    var f = scr === 'change';
+    h = '<div class="card bform">' + brand(f ? 'Choose a new password' : 'My account', f
+      ? 'A head reset your password. Choose your own now.'
+      : 'Signed in as ' + esc(u.name) + ' · ' + esc(u.role)) + '<div class="fbody">'
+      + (f ? '' : '<div class="ur" style="margin:0 0 12px"><span class="av">' + ini(u.name) + '</span><span class="n" dir="auto">' + esc(u.name) + (u.role === 'head' ? ' <span class="pl s-acc">head</span>' : '') + '</span><span class="u">' + esc(u.username) + '</span></div>')
+      + '<h3 class="sh" style="margin-top:0">' + (f ? 'New password' : 'Change password') + '</h3>'
+      + (f ? (loginPw ? '' : pwField('cp0', 'Temporary password', 'The password a head gave you')) : pwField('cp0', 'Current password', 'Your current password'))
+      + pwField('cp1', 'New password', 'At least 8 characters')
+      + pwField('cp2', 'Confirm new password', 'Repeat the new password')
+      + '<p class="er" id="cpe" style="display:none"></p>' + (cpmsg ? '<p class="ok">' + cpmsg + '</p>' : '')
+      + '<div class="bar"><button class="pri" id="cgo">' + (f ? 'Save new password' : 'Change password') + '</button>' + (f ? '' : '<button id="logoutBtn">Log out</button>') + '</div>'
+      + (f ? '' : '<h3 class="sh">Use it like an app</h3><div class="bar" style="margin-top:0"><button id="inst2">Install app on this phone</button></div><div class="ip" id="ip2" style="display:none;margin-top:8px"></div>'
+        + (u.role === 'head' ? '<h3 class="sh">Team accounts</h3>'
+          + '<p class="nt" style="margin:0 0 8px">' + (stats.loaded ? stats.active + ' active · ' + stats.pending + ' waiting for approval' : 'Checking the team…') + '</p>'
+          + (stats.loaded && stats.pending ? '<p class="ok" style="margin:0 0 8px">' + stats.pending + (stats.pending === 1 ? ' person is' : ' people are') + ' waiting for your approval.</p>' : '')
+          + '<div class="bar" style="margin-top:0"><button class="pri" data-s="approvals">' + (stats.pending ? 'Approve or manage accounts' : 'Manage team accounts') + '</button></div>' : ''))
+      + '</div></div>';
+    cpmsg = '';
+  } else if (scr === 'approvals') {
+    if (!u || u.role !== 'head') { scr = 'myacct'; return view(); }
+    var pend = allUsers.filter(function (x) { return x.status === 'pending'; });
+    var act = allUsers.filter(function (x) { return x.status === 'active'; });
+    var rej = allUsers.filter(function (x) { return x.status === 'rejected'; });
+    h = '<div class="hero"><h1>Approvals</h1><p>Only heads can see this screen.</p></div>'
+      + '<div class="cnt"><div class="c"><b>' + pend.length + '</b><span>Waiting</span></div><div class="c"><b>' + act.length + '</b><span>Active members</span></div></div>'
+      + '<h3 class="sh">Waiting for approval (' + pend.length + ')</h3>'
+      + (pend.length ? pend.map(function (x) {
+          return '<div class="ur"><span class="av">' + ini(x.name) + '</span><span class="n" dir="auto">' + esc(x.name) + '</span><span class="u">' + esc(x.username) + '</span><button class="pri" data-ap="' + x.id + '">Approve</button><button data-rj="' + x.id + '">Reject</button></div>';
+        }).join('') : '<p class="empty">Nobody is waiting.</p>')
+      + (msg ? '<p class="ok">' + msg + '</p>' : '')
+      + '<h3 class="sh">Team (' + act.length + ')</h3>'
+      + act.map(function (x) {
+          return '<div class="ur"><span class="av">' + ini(x.name) + '</span><span class="n" dir="auto">' + esc(x.name) + (x.role === 'head' ? ' <span class="pl s-acc">head</span>' : '') + '</span><span class="u">' + esc(x.username) + '</span>'
+            + (tmp[x.id] ? '<span class="nt">New password: <span class="tmp">' + esc(tmp[x.id]) + '</span> shown once</span>' : '')
+            + '<button data-rs="' + x.id + '">Reset password</button>'
+            + (u.id === x.id ? '' : (x.role === 'head' ? '<button data-rl="member" data-id="' + x.id + '">Remove head</button>' : '<button data-rl="head" data-id="' + x.id + '">Make head</button>'))
+            + (u.id === x.id ? '' : '<button data-del="' + x.id + '">Delete</button>')
+            + '</div>';
+        }).join('')
+      + (rej.length ? '<h3 class="sh">Rejected (' + rej.length + ')</h3>' + rej.map(function (x) {
+          return '<div class="ur"><span class="av off">' + ini(x.name) + '</span><span class="n" dir="auto">' + esc(x.name) + '</span><span class="u">' + esc(x.username) + '</span><button data-ap="' + x.id + '">Approve</button><button data-del="' + x.id + '">Delete</button></div>';
+        }).join('') : '')
+      + '<div class="bar" style="margin-top:12px"><button data-s="myacct">Back to my account</button></div>';
+    msg = '';
+  } else if (scr === 'signup') {
+    h = '<div class="card bform">' + brand('Create account', 'A head must approve your account before you can log in.') + '<div class="fbody"><label class="fld">Full name<input id="sn" dir="auto" placeholder="Dr. Name"></label><label class="fld">Username<input id="su" autocomplete="off" placeholder="at least 3 letters"></label>' + pwField('sp', 'Password', 'At least 8 characters') + pwField('sc', 'Confirm password', 'Repeat the password') + '<p class="er" id="se" style="display:none"></p><div class="bar"><button class="pri" id="sgo">Create account</button><button data-s="login">I already have an account</button></div></div></div>';
+  } else if (scr === 'pending') {
+    h = '<div class="card bform">' + brand('Waiting for approval', 'Your account was created.') + '<div class="fbody pend"><div class="ic">…</div><p class="sub">A head needs to approve it before you can log in. Ask one of them to open the Approvals screen.</p><button data-s="login">Back to log in</button></div></div>';
+  } else {
+    h = '<div class="card bform">' + brand('Log in', 'Use the username your account was created with.') + '<div class="fbody"><label class="fld">Username<input id="lu" autocomplete="off" placeholder="for example sara"></label>' + pwField('lp', 'Password', 'Password') + '<p class="er" id="le" style="display:none"></p>' + (signed ? '<p class="ok">Signed in as ' + esc(signed) + '.</p>' : '') + '<div class="bar"><button class="pri" id="lgo">Log in</button><button data-s="signup">Create account</button></div><p class="nt" style="margin-top:12px">Forgot your password? Ask a head to reset it. They give you a temporary password, and you choose your own the next time you log in.</p></div></div>';
+  }
+  $('v').innerHTML = h;
+  if ($('inst2')) ALX_install($('inst2'), $('ip2'));
+}
+
+/* ---------- data ---------- */
+async function loadApprovals() {
+  var d = await api('/api/users/team');
+  allUsers = d.users || [];
+  stats.pending = allUsers.filter(function (x) { return x.status === 'pending'; }).length;
+  stats.active = allUsers.filter(function (x) { return x.status === 'active'; }).length;
+  stats.loaded = true;
+}
+
+function go(s) {
+  scr = s; signed = null; msg = '';
+  if (s === 'approvals') {
+    view();
+    loadApprovals().then(view).catch(function (e) { view(); err('le', e.message); });
+    return;
+  }
+  view();
+  if (s === 'myacct' && session.isHead()) {
+    loadApprovals().then(function () { if (scr === 'myacct') view(); }).catch(function () {});
+  }
+}
+
+/* ---------- events ---------- */
+$('v').addEventListener('click', async function (e) {
+  var b = e.target.closest('button');
+  if (!b) return;
+
+  if (b.dataset.s) { go(b.dataset.s); return; }
+
+  if (b.id === 'logoutBtn') { session.logout(); return; }
+
+  if (b.dataset.pw) {
+    var ids = ['lp', 'sp', 'sc', 'cp0', 'cp1', 'cp2'], val = {};
+    ids.forEach(function (i) { if ($(i)) val[i] = $(i).value; });
+    showPw = !showPw; view();
+    for (var k in val) if ($(k)) $(k).value = val[k];
+    return;
+  }
+
+  if (b.id === 'lgo') {
+    var u = ($('lu').value || '').trim().toLowerCase(), p = $('lp').value || '';
+    clearErr('le');
+    if (!u || !p) return err('le', 'Enter your username and password.');
+    b.disabled = true;
+    try {
+      var d = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
+      session.setSession(d.token, d.user);
+      loginPw = p;
+      var next = new URLSearchParams(location.search).get('next');
+      if (d.user && d.user.mustChangePassword) { scr = 'change'; view(); return; }
+      location.replace(next ? decodeURIComponent(next) : '/home');
+    } catch (ex) {
+      err('le', ex.message);
+    } finally { b.disabled = false; }
+    return;
+  }
+
+  if (b.id === 'sgo') {
+    var n = ($('sn').value || '').trim(), u2 = ($('su').value || '').trim().toLowerCase();
+    var p1 = $('sp').value || '', p2 = $('sc').value || '';
+    clearErr('se');
+    if (!n) return err('se', 'Enter your full name.');
+    if (u2.length < 3) return err('se', 'Username needs at least 3 letters.');
+    if (p1.length < 8) return err('se', 'Password needs at least 8 characters.');
+    if (p1 !== p2) return err('se', 'The two passwords do not match.');
+    b.disabled = true;
+    try {
+      await api('/api/auth/signup', { method: 'POST', body: JSON.stringify({ name: n, username: u2, password: p1 }) });
+      scr = 'pending'; view();
+    } catch (ex) { err('se', ex.message); }
+    finally { b.disabled = false; }
+    return;
+  }
+
+  if (b.id === 'cgo') {
+    var forced = scr === 'change';
+    var oldP = forced ? (loginPw || ($('cp0') ? ($('cp0').value || '') : '')) : ($('cp0').value || '');
+    var n1 = $('cp1').value || '', n2 = $('cp2').value || '';
+    clearErr('cpe');
+    if (!oldP) return err('cpe', forced ? 'Enter the temporary password a head gave you.' : 'Enter your current password.');
+    if (n1.length < 8) return err('cpe', 'The new password needs at least 8 characters.');
+    if (!forced && n1 === oldP) return err('cpe', 'Choose a password different from the current one.');
+    if (n1 !== n2) return err('cpe', 'The two passwords do not match.');
+    b.disabled = true;
+    try {
+      await api('/api/auth/change-password', { method: 'POST', body: JSON.stringify({ oldPassword: oldP, newPassword: n1 }) });
+      loginPw = n1;
+      session.clearMustChange();
+      var cur = session.user();
+      cur.mustChangePassword = false;
+      session.setSession(localStorage.getItem('token'), cur);
+      cpmsg = forced ? 'Password saved. You are signed in.' : 'Password changed.';
+      scr = 'myacct'; msg = ''; view();
+    } catch (ex) { err('cpe', ex.message); }
+    finally { b.disabled = false; }
+    return;
+  }
+
+  if (b.dataset.ap) {
+    b.disabled = true;
+    try { await api('/api/users/' + b.dataset.ap + '/approve', { method: 'POST' }); msg = 'Approved. They can log in now.'; await loadApprovals(); }
+    catch (ex) { msg = ex.message; }
+    view(); return;
+  }
+  if (b.dataset.rj) {
+    b.disabled = true;
+    try { await api('/api/users/' + b.dataset.rj + '/reject', { method: 'POST' }); msg = 'Rejected.'; await loadApprovals(); }
+    catch (ex) { msg = ex.message; }
+    view(); return;
+  }
+  if (b.dataset.rs) {
+    b.disabled = true;
+    try {
+      var r = await api('/api/users/' + b.dataset.rs + '/reset-password', { method: 'POST', body: '{}' });
+      tmp[b.dataset.rs] = r.password;
+      msg = 'Give this temporary password to the member. They choose their own at the next log in.';
+    } catch (ex) { msg = ex.message; }
+    view(); return;
+  }
+  if (b.dataset.rl) {
+    b.disabled = true;
+    try { await api('/api/users/' + b.dataset.id + '/role', { method: 'PATCH', body: JSON.stringify({ role: b.dataset.rl }) }); msg = b.dataset.rl === 'head' ? 'Head role granted.' : 'Head role removed.'; await loadApprovals(); }
+    catch (ex) { msg = ex.message; }
+    view(); return;
+  }
+  if (b.dataset.del) {
+    if (!window.confirm('Delete this account? This cannot be undone.')) return;
+    b.disabled = true;
+    try { await api('/api/users/' + b.dataset.del, { method: 'DELETE' }); msg = 'Account deleted.'; await loadApprovals(); }
+    catch (ex) { msg = ex.message; }
+    view(); return;
+  }
+});
+
+/* initial screen: a stored token is checked with the server before showing My account */
+(function init() {
+  var next = new URLSearchParams(location.search).get('next');
+  var tok = localStorage.getItem('token');
+  if (!tok) { scr = 'login'; return view(); }
+  api('/api/auth/me').then(function (d) {
+    session.setSession(tok, d.user);
+    if (d.user && d.user.mustChangePassword) { scr = 'change'; return view(); }
+    if (next) { location.replace(decodeURIComponent(next)); return; }
+    go('myacct');
+  }).catch(function () {
+    scr = 'login'; signed = null; view();
+  });
+})();
+</script>
+</body>
+</html>

@@ -3,22 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Team attendance · design source of truth</title>
+<title>Team attendance · ALEXEA Course Manager</title>
 <link rel="stylesheet" href="shared.css">
-<!--
-  DESIGN SOURCE OF TRUTH: team attendance and Upper/Lower assignment. Match exactly. Do not restyle.
-  FLOW: the app knows today's date, so it finds today's course and day from the calendar (no course picker).
-  1) A member taps "I'm here" -> checked in, status "Waiting for assignment".
-  2) A head assigns each checked-in person to the Upper team (stations 1-6, always dry) or the Lower team
-     (stations 7-12: dry, wet or animal, from that day's hands-on type in the course programme).
-     Heads can tap two names to swap them, move a selected name to a team, or press Randomize.
-  3) The member then sees "You are in the Upper team".
-  Check-in after the start time = late. Absent people cannot be assigned. Needs courses-2026.js and station-sprite.js.
-  "View as", "Signed in as", "Preview date" and "Preview clock" are preview-only controls.
--->
 <style>
-.pv{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px;font-size:12px;color:var(--text-2)}
-.pv select{padding:4px 8px}
 .me{border-radius:14px;padding:14px 16px;margin:0 0 12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .me .t{flex:1;min-width:200px;font-size:15px}
 .me.go{background:var(--bg-accent);color:var(--text-accent)}
@@ -58,21 +45,15 @@
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#003C7E">
-<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <script src="js/config.js"></script><script src="js/api.js"></script><script src="js/session.js"></script></head>
 <body>
 <div class="wrap">
 <header class="top">
-  <a class="hl" href="home.html" aria-label="Home"><div class="logo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><span class="brand">ALEXEA Course Manager</span></a>
-  <nav class="nav"><a href="home.html">Home</a><a href="calendar.html">Calendar</a><a href="hands-on.html">Hands-on</a><a class="cur" href="attendance.html">Attendance</a><a href="tools.html">Tools</a><a href="import.html">Candidates</a><a href="activity.html">Activity</a><a href="accounts.html">Account</a></nav>
+  <a class="hl" href="/home" aria-label="Home"><div class="logo"><img src="assets/alexea-logo.jpg" alt="ALEXEA logo"></div><span class="brand">ALEXEA Course Manager</span></a>
+  <nav class="nav"><a href="/home">Home</a><a href="/calendar">Calendar</a><a href="/hands-on">Hands-on</a><a class="cur" href="/attendance">Attendance</a><a href="/tools">Tools</a><a href="/candidates">Candidates</a><a href="/activity">Activity</a><a href="/account">Account</a></nav>
 </header>
 <div class="hero"><h1>Team attendance</h1><p id="sub"></p></div>
-<div class="pv"><span>Preview only:</span>
-  <button id="rh">Head</button><button id="ri">Member</button>
-  Signed in as <select id="who"></select>
-  Date <select id="pd"><option value="2026-11-06">Fri 6 Nov (no course)</option><option value="2026-11-08">Sun 8 Nov (day 1)</option><option value="2026-11-09" selected>Mon 9 Nov (day 2)</option><option value="2026-11-10">Tue 10 Nov (day 3, shift)</option><option value="2026-11-11">Wed 11 Nov (day 4, live surgery)</option></select>
-  Clock <select id="clk"><option value="08:45">08:45</option><option value="09:12" selected>09:12</option></select>
-</div>
 <div id="none" class="box none" style="display:none"></div>
 <div id="main">
   <div class="me" id="me"></div>
@@ -84,85 +65,186 @@
 </div>
 </div>
 <script src="install.js"></script>
-<script src="courses-2026.js"></script>
 <script src="station-sprite.js"></script>
 <script>
-/* SAMPLE state. In the real app this comes from the API for today's course day. */
-var START='09:00',head=true,me=2,sel=null,PD='2026-11-09',M=[];
-var NM={d:['Dry','t-d'],w:['Wet','t-w'],a:['Animal','t-a']},LT={d12:'d',dw:'w',da:'a',sh:'a'};
-var LB={p:['Present','s-ok'],l:['Late','s-warn'],a:['Absent','s-bad'],'':['Not checked in','s-mut']};
-function $(i){return document.getElementById(i)}
-function ini(n){return n.replace(/^Dr\.\s*/,'').charAt(0)}
-function days(a,b){var r=[],d=new Date(a+'T00:00:00Z'),e=new Date(b+'T00:00:00Z');while(d<=e){r.push(d.toISOString().slice(0,10));d=new Date(d.getTime()+864e5)}return r}
-function fdate(k){var d=new Date(k+'T00:00:00Z');return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getUTCDay()]+' '+d.getUTCDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()]+' '+d.getUTCFullYear()}
-function ht(i,n){if(n==1)return 'none';if(i==1)return 'd12';if(i==n&&n>2)return 'none';if(i==2)return 'dw';if(i==3)return 'sh';return 'da'}
-function info(k){for(var i=0;i<CS.length;i++){var c=CS[i];if(k>=c[2]&&k<=c[3]){var ds=days(c[2],c[3]),ix=ds.indexOf(k)+1;return {c:c,i:ix,n:ds.length,t:ht(ix,ds.length)}}}return null}
-function init(){M=[{n:'Dr. Ahmed',h:1,s:'p',t:'08:48',g:''},{n:'Dr. Hany',h:1,s:'p',t:'08:55',g:''},{n:'Dr. Sara',h:0,s:'',t:'',g:''},{n:'Dr. Omar',h:0,s:'l',t:'09:12',g:''},{n:'Dr. Nour',h:0,s:'p',t:'08:50',g:''},{n:'Dr. Mona',h:0,s:'a',t:'',g:''},{n:'Dr. Youssef',h:0,s:'p',t:'08:58',g:''},{n:'Dr. Karim',h:0,s:'',t:'',g:''}];sel=null}
-function on(m){return m.s=='p'||m.s=='l'}
-function chip(m){return '<button class="mc'+(sel==m.n?' on':'')+'" data-n="'+m.n+'"'+(head?'':' disabled')+'><span class="av sm">'+ini(m.n)+'</span>'+m.n+(m.h?' <span class="pl s-acc">head</span>':'')+(m.s=='l'?' <span class="pl s-warn">late</span>':'')+'</button>'}
-function group(g,I){
-  var lab=g=='U'?'Upper':'Lower',r=g=='U'?1:7,ty=g=='U'?'d':LT[I.t],mem=M.filter(function(m){return on(m)&&m.g==g}),tw='';
-  for(var i=0;i<6;i++)tw+='<div class="tw"><div class="twh"><span>Station '+(r+i)+'</span><span class="tp '+NM[ty][1]+'">'+NM[ty][0]+'</span></div><svg viewBox="0 0 220 200" width="100%" role="img" aria-label="'+NM[ty][0]+' lab station"><use href="#'+ty+'"/></svg></div>';
-  return '<div class="gp"><div class="gh"><div><b style="font-weight:500">'+lab+' team</b> <span class="nt">stations '+r+'–'+(r+5)+' · '+NM[ty][0]+(I.t=='sh'&&g=='L'?' first, groups swap halfway':'')+'</span></div>'+(head&&sel?'<button data-mv="'+g+'">Move '+sel+' here</button>':'')+'</div><div class="avs">'+(mem.length?mem.map(chip).join(''):'<span class="nt">Nobody assigned yet</span>')+'</div><div class="tws">'+tw+'</div></div>'}
-function render(){
-  var I=info(PD);
-  $('who').innerHTML=M.map(function(m,i){return '<option value="'+i+'"'+(i==me?' selected':'')+'>'+m.n+'</option>'}).join('');
-  $('rh').className=head?'on':'';$('ri').className=head?'':'on';
-  if(!I){var nx=null;CS.forEach(function(c){if(c[2]>PD&&(!nx||c[2]<nx[2]))nx=c});
-    $('sub').textContent=fdate(PD)+' · no course today';$('none').style.display='block';$('main').style.display='none';
-    $('none').innerHTML='<h3 class="sh" style="margin-top:0">No course is running today</h3><p class="nt">'+(nx?'Next course: <span dir="auto">'+nx[1]+'</span> starts '+fdate(nx[2])+'.':'')+'</p><a class="btn" href="calendar.html" style="margin-top:10px">Open the calendar</a>';return}
-  $('none').style.display='none';$('main').style.display='block';
-  $('sub').innerHTML='<span dir="auto">'+I.c[1]+'</span> · day '+I.i+' of '+I.n+' · '+fdate(PD)+' · starts '+START;
-  var m=M[me],mm,cls;
-  if(m.s=='a'){cls='off';mm='<span class="t">You are marked absent today. Ask a head if this is wrong.</span>'}
-  else if(m.s==''){cls='go';mm='<span class="t">Hi '+m.n+'. Tap when you arrive. Checking in after '+START+' counts as late.</span><button class="pri xl" id="here">I\'m here</button>'}
-  else if(m.g==''){cls='wait';mm='<span class="t"><span class="pulse"></span>Checked in at '+m.t+'. <b>Waiting for a head to assign you</b> to the Upper or Lower team.</span>'}
-  else{cls='done';mm='<span class="t">You are in the <b>'+(m.g=='U'?'Upper team · stations 1–6':'Lower team · stations 7–12')+'</b>'+(I.t=='none'?'':' · '+NM[m.g=='U'?'d':LT[I.t]][0]+' lab')+'.</span>'}
-  $('me').className='me '+cls;$('me').innerHTML=mm;
-  var c={p:0,l:0,a:0,n:0};M.forEach(function(x){if(x.s=='')c.n++;else c[x.s]++});
-  $('cnt').innerHTML=[['p','Present'],['l','Late'],['a','Absent'],['n','Not checked in']].map(function(x){return '<div class="c"><b>'+c[x[0]]+'</b><span>'+x[1]+'</span></div>'}).join('');
-  var onl=M.filter(on),hd=onl.filter(function(x){return x.h}).length,w='';
-  if(hd==0)w+='<p class="er">No head has checked in yet.</p>';
-  if(onl.length&&onl.every(function(x){return x.g!='U'})&&I.t!='none')w+='<p class="er">Nobody is assigned to the Upper team yet.</p>';
-  $('warn').innerHTML=w;
-  var wait=onl.filter(function(x){return x.g==''});
-  $('pool').innerHTML='<div class="tb2"><b style="font-weight:500">Waiting for assignment ('+wait.length+')</b>'+(head?'<span style="flex:1"></span><button id="rnd">Randomize</button><button id="clr">Clear assignments</button>':'')+'</div><div class="avs" style="margin:0">'+(wait.length?wait.map(chip).join(''):'<span class="nt">Everyone on site is assigned.</span>')+'</div>'+(head?'<p class="nt" style="margin-top:8px">Tap a name, then press Move here on a team. Tap two names to swap them. Suggested split: '+Math.ceil(onl.length/2)+' Upper, '+Math.floor(onl.length/2)+' Lower.</p>':'');
-  $('groups').innerHTML=I.t=='none'?'<div class="box"><p class="nt" style="margin:0">No hands-on today, so no Upper or Lower assignment is needed.</p></div>':group('U',I)+group('L',I);
-  $('list').innerHTML='<h3 class="sh" style="margin-top:0">Check-in list</h3>'+M.map(function(x,i){
-    var ctl=head?'<div class="seg"><button class="p'+(x.s=='p'?' on':'')+'" data-i="'+i+'" data-s="p">Present</button><button class="l'+(x.s=='l'?' on':'')+'" data-i="'+i+'" data-s="l">Late</button><button class="a'+(x.s=='a'?' on':'')+'" data-i="'+i+'" data-s="a">Absent</button></div>':'<span class="pl '+LB[x.s][1]+'">'+LB[x.s][0]+'</span>';
-    return '<div class="mr"><span class="av'+(x.s=='a'?' off':'')+'">'+ini(x.n)+'</span><span class="n">'+x.n+(x.h?' <span class="pl s-acc">head</span>':'')+'</span><span class="tm">'+(x.t||'')+'</span>'+ctl+'</div>'}).join('')}
-function shuf(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
-$('main').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
-  if(b.id=='here'){var m=M[me],t=$('clk').value;m.t=t;m.s=t>START?'l':'p';render();return}
-  if(b.dataset.n&&head){var n=b.dataset.n;if(sel==null)sel=n;else if(sel==n)sel=null;else{var A=M.filter(function(x){return x.n==sel})[0],B=M.filter(function(x){return x.n==n})[0],g=A.g;A.g=B.g;B.g=g;sel=null}render();return}
-  if(b.dataset.mv&&sel){M.filter(function(x){return x.n==sel})[0].g=b.dataset.mv;sel=null;render();return}
-  if(b.id=='rnd'){var o=M.filter(on),hs=shuf(o.filter(function(x){return x.h})),os=shuf(o.filter(function(x){return !x.h})),a=hs.concat(os),f=Math.random()<.5;a.forEach(function(x,i){x.g=((i%2==0)==f)?'U':'L'});sel=null;render();return}
-  if(b.id=='clr'){M.forEach(function(x){x.g=''});sel=null;render();return}
-  if(b.dataset.s){var x2=M[+b.dataset.i];x2.s=x2.s==b.dataset.s?'':b.dataset.s;if(x2.s=='p'||x2.s=='l'){if(!x2.t)x2.t=$('clk').value}else{x2.g='';if(x2.s=='')x2.t=''}render()}});
-$('who').onchange=function(e){me=+e.target.value;render()};
-$('pd').onchange=function(e){PD=e.target.value;init();render()};
-$('rh').onclick=function(){head=true;sel=null;render()};$('ri').onclick=function(){head=false;sel=null;render()};
-init();render();
-</script>
-<script>
-(async function(){
+var head = false, me = null, sel = null, day = null, course = null, users = [], att = {}, team = {};
+var NM = { d: ['Dry', 't-d'], w: ['Wet', 't-w'], a: ['Animal', 't-a'] };
+var LT = { d12: 'd', dw: 'w', da: 'a', sh: 'a' };
+var LB = { present: ['Present', 's-ok'], late: ['Late', 's-warn'], absent: ['Absent', 's-bad'], '': ['Not checked in', 's-mut'] };
+var TYPE = { d12: '12 dry stations', dw: '6 dry + 6 wet', da: '6 dry + 6 animal', sh: 'Shift day', none: 'No hands-on' };
+
+function $(i) { return document.getElementById(i); }
+function esc(x) { var e = document.createElement('div'); e.textContent = x == null ? '' : x; return e.innerHTML; }
+function ini(n) { return (n || '?').replace(/^Dr\.\s*/i, '').charAt(0).toUpperCase(); }
+function fdate(k) { var d = new Date(k + 'T00:00:00Z'); return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getUTCDay()] + ' ' + d.getUTCDate() + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getUTCMonth()] + ' ' + d.getUTCFullYear(); }
+function nowHM() { var d = new Date(); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+function startTime() { if (day && day.rows && day.rows.length) { var r = day.rows.slice().sort(function (a, b) { return String(a[0]).localeCompare(String(b[0])); }); return r[0][0]; } return '09:00'; }
+function on(u) { var a = att[u.id]; return a && (a.state === 'present' || a.state === 'late'); }
+function rec(u) { return att[u.id] || {}; }
+
+/* ---------- render ---------- */
+function render() {
+  $('main').style.display = 'block';
+  $('none').style.display = 'none';
+  $('sub').innerHTML = '<span dir="auto">' + esc(course ? course.name : '') + '</span> · day ' + (day.index || 1) + ' · ' + fdate(day.date) + ' · starts ' + startTime();
+
+  var my = me ? rec(me) : {};
+  var cls, mm;
+  if (!me) {
+    cls = 'off'; mm = '<span class="t">Your account is not in the team list yet.</span>';
+  } else if (my.state === 'absent') {
+    cls = 'off'; mm = '<span class="t">You are marked absent today. Ask a head if this is wrong.</span>';
+  } else if (!my.state) {
+    cls = 'go'; mm = '<span class="t">Hi ' + esc(me.name) + '. Tap when you arrive. Checking in after ' + startTime() + ' counts as late.</span><button class="pri xl" id="here">I\'m here</button>';
+  } else if (!team[me.id]) {
+    cls = 'wait'; mm = '<span class="t"><span class="pulse"></span>Checked in at ' + esc(my.checkedInAt || '') + '. <b>Waiting for a head to assign you</b> to the Upper or Lower team.</span>';
+  } else {
+    cls = 'done'; mm = '<span class="t">You are in the <b>' + (team[me.id] === 'U' ? 'Upper team · stations 1–6' : 'Lower team · stations 7–12') + '</b>' + (day.type === 'none' ? '' : ' · ' + NM[team[me.id] === 'U' ? 'd' : LT[day.type]][0] + ' lab') + '.</span>';
+  }
+  $('me').className = 'me ' + cls;
+  $('me').innerHTML = mm;
+
+  var c = { p: 0, l: 0, a: 0, n: 0 };
+  users.forEach(function (u) { var s = rec(u).state; if (!s) c.n++; else if (s === 'present') c.p++; else if (s === 'late') c.l++; else c.a++; });
+  $('cnt').innerHTML = [['p', 'Present'], ['l', 'Late'], ['a', 'Absent'], ['n', 'Not checked in']].map(function (x) { return '<div class="c"><b>' + c[x[0]] + '</b><span>' + x[1] + '</span></div>'; }).join('');
+
+  var onl = users.filter(on), hd = onl.filter(function (u) { return u.role === 'head'; }).length, w = '';
+  if (!hd) w += '<p class="er">No head has checked in yet.</p>';
+  if (onl.length && day.type !== 'none' && onl.every(function (u) { return team[u.id] !== 'U'; })) w += '<p class="er">Nobody is assigned to the Upper team yet.</p>';
+  $('warn').innerHTML = w;
+
+  var wait = onl.filter(function (u) { return !team[u.id]; });
+  $('pool').innerHTML = '<div class="tb2"><b style="font-weight:500">Waiting for assignment (' + wait.length + ')</b>' + (head ? '<span style="flex:1"></span><button id="rnd">Randomize</button><button id="clr">Clear assignments</button>' : '') + '</div><div class="avs" style="margin:0">' + (wait.length ? wait.map(chip).join('') : '<span class="nt">Everyone on site is assigned.</span>') + '</div>' + (head ? '<p class="nt" style="margin-top:8px">Tap a name, then press Move here on a team. Tap two names to swap them. Suggested split: ' + Math.ceil(onl.length / 2) + ' Upper, ' + Math.floor(onl.length / 2) + ' Lower.</p>' : '');
+
+  $('groups').innerHTML = day.type === 'none' ? '<div class="box"><p class="nt" style="margin:0">No hands-on today, so no Upper or Lower assignment is needed.</p></div>' : group('U') + group('L');
+
+  $('list').innerHTML = '<h3 class="sh" style="margin-top:0">Check-in list</h3>' + users.map(function (u) {
+    var s = rec(u).state || '';
+    var ctl = head
+      ? '<div class="seg"><button class="p' + (s === 'present' ? ' on' : '') + '" data-i="' + u.id + '" data-s="present">Present</button><button class="l' + (s === 'late' ? ' on' : '') + '" data-i="' + u.id + '" data-s="late">Late</button><button class="a' + (s === 'absent' ? ' on' : '') + '" data-i="' + u.id + '" data-s="absent">Absent</button></div>'
+      : '<span class="pl ' + (LB[s] || LB[''])[1] + '">' + (LB[s] || LB[''])[0] + '</span>';
+    return '<div class="mr"><span class="av' + (s === 'absent' ? ' off' : '') + '">' + ini(u.name) + '</span><span class="n" dir="auto">' + esc(u.name) + (u.role === 'head' ? ' <span class="pl s-acc">head</span>' : '') + '</span><span class="tm">' + esc(rec(u).checkedInAt || '') + '</span>' + ctl + '</div>';
+  }).join('');
+}
+function chip(u) {
+  var s = rec(u).state;
+  return '<button class="mc' + (sel === u.id ? ' on' : '') + '" data-n="' + u.id + '"' + (head ? '' : ' disabled') + '><span class="av sm">' + ini(u.name) + '</span>' + esc(u.name) + (u.role === 'head' ? ' <span class="pl s-acc">head</span>' : '') + (s === 'late' ? ' <span class="pl s-warn">late</span>' : '') + '</button>';
+}
+function group(g) {
+  var lab = g === 'U' ? 'Upper' : 'Lower', r = g === 'U' ? 1 : 7;
+  var ty = g === 'U' ? 'd' : (LT[day.type] || 'a');
+  var mem = users.filter(function (u) { return on(u) && team[u.id] === g; });
+  var tw = '';
+  for (var i = 0; i < 6; i++) tw += '<div class="tw"><div class="twh"><span>Station ' + (r + i) + '</span><span class="tp ' + NM[ty][1] + '">' + NM[ty][0] + '</span></div><svg viewBox="0 0 220 200" width="100%" role="img" aria-label="' + NM[ty][0] + ' lab station"><use href="#' + ty + '"/></svg></div>';
+  var selName = sel ? (users.filter(function (u) { return u.id === sel; })[0] || {}).name : '';
+  return '<div class="gp"><div class="gh"><div><b style="font-weight:500">' + lab + ' team</b> <span class="nt">stations ' + r + '–' + (r + 5) + ' · ' + NM[ty][0] + (day.type === 'sh' && g === 'L' ? ' first, groups swap halfway' : '') + '</span></div>' + (head && sel ? '<button data-mv="' + g + '">Move ' + esc(selName) + ' here</button>' : '') + '</div><div class="avs">' + (mem.length ? mem.map(chip).join('') : '<span class="nt">Nobody assigned yet</span>') + '</div><div class="tws">' + tw + '</div></div>';
+}
+
+/* ---------- persistence ---------- */
+async function saveTeam() {
+  try { await api('/api/courses/day/' + day._id, { method: 'PATCH', body: JSON.stringify({ team: team }) }); }
+  catch (ex) { console.error(ex); }
+}
+async function load() {
+  if (!session.requireAuth()) return;
+  head = session.isHead();
+  var u = session.user();
   try {
-    var cd = await api('/api/courses/current-day');
-    if (cd && cd.day) {
-      window.CDAY = cd.day._id;
-      var users = await api('/api/users');
-      var att = await api('/api/attendance?courseDayId='+cd.day._id);
-      var amap = {}; (att.attendance||[]).forEach(function(a){ amap[a.userId]=a; });
-      // wire clear assignments
-      document.addEventListener('click', async function(e){
-        var b = e.target.closest('#clr'); if (!b) return;
-        try { await api('/api/attendance/assignments?courseDayId='+window.CDAY, { method:'DELETE' }); } catch(err){ console.error(err); }
-      }, true);
+    var d = await api('/api/courses/active-day');
+    if (!d || !d.day) return noCourse();
+    day = d.day; course = d.course;
+    team = day.team || {};
+    var r = await api('/api/users'); users = r.users || [];
+    me = users.filter(function (x) { return String(x.id) === String(u.id); })[0] || null;
+    var a = await api('/api/attendance?courseDayId=' + day._id);
+    att = {};
+    (a.attendance || []).forEach(function (x) { att[x.userId] = x; });
+    render();
+  } catch (ex) {
+    $('main').style.display = 'none';
+    $('none').style.display = 'block';
+    $('none').innerHTML = '<h3 class="sh" style="margin-top:0">Could not load today\'s course</h3><p class="nt">' + esc(ex.message) + '</p>';
+  }
+}
+async function noCourse() {
+  $('main').style.display = 'none';
+  $('none').style.display = 'block';
+  var today = new Date().toISOString().slice(0, 10);
+  $('sub').textContent = fdate(today) + ' · no course today';
+  var nx = '';
+  try {
+    var d = await api('/api/courses');
+    var cs = (d.courses || []).filter(function (c) { return c.startDate > today; }).sort(function (a, b) { return a.startDate < b.startDate ? -1 : 1; });
+    if (cs[0]) nx = 'Next course: <span dir="auto">' + esc(cs[0].name) + '</span> starts ' + fdate(cs[0].startDate) + '.';
+  } catch (ex) {}
+  $('none').innerHTML = '<h3 class="sh" style="margin-top:0">No course is running today</h3><p class="nt">' + nx + '</p><a class="btn" href="/calendar" style="margin-top:10px">Open the calendar</a>';
+}
+
+/* ---------- events ---------- */
+$('main').addEventListener('click', async function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+
+  if (b.id === 'here') {
+    b.disabled = true;
+    try {
+      var r = await api('/api/attendance/checkin', { method: 'POST', body: JSON.stringify({ courseDayId: day._id, time: nowHM() }) });
+      await load();
+    } catch (ex) { alert(ex.message); b.disabled = false; }
+    return;
+  }
+
+  if (b.dataset.n && head) {
+    var id = b.dataset.n;
+    if (sel === null) sel = id;
+    else if (sel === id) sel = null;
+    else {
+      var gA = team[sel] || '', gB = team[id] || '';
+      if (gA) team[sel] = gB; else delete team[sel];
+      if (gB) team[id] = gA; else delete team[id];
+      sel = null;
+      await saveTeam();
     }
-  } catch(e){ console.error('attendance load failed', e); }
-})();
+    render(); return;
+  }
+
+  if (b.dataset.mv && sel) {
+    team[sel] = b.dataset.mv; sel = null;
+    await saveTeam(); render(); return;
+  }
+
+  if (b.id === 'rnd') {
+    var onl = users.filter(on);
+    var hs = shuf(onl.filter(function (u) { return u.role === 'head'; }));
+    var os = shuf(onl.filter(function (u) { return u.role !== 'head'; }));
+    var all = hs.concat(os), f = Math.random() < .5;
+    team = {};
+    all.forEach(function (u, i) { team[u.id] = ((i % 2 === 0) === f) ? 'U' : 'L'; });
+    sel = null;
+    await saveTeam(); render(); return;
+  }
+
+  if (b.id === 'clr') {
+    team = {}; sel = null;
+    try { await api('/api/attendance/assignments?courseDayId=' + day._id, { method: 'DELETE' }); } catch (ex) { console.error(ex); }
+    render(); return;
+  }
+
+  if (b.dataset.s && head) {
+    var uid = b.dataset.i, state = b.dataset.s;
+    var same = rec({ id: uid }).state === state;
+    b.disabled = true;
+    try {
+      await api('/api/attendance', { method: 'POST', body: JSON.stringify({ courseDayId: day._id, userId: uid, state: same ? 'absent' : state, checkedInAt: same ? '' : nowHM() }) });
+      if (same) delete team[uid];
+      await load();
+    } catch (ex) { alert(ex.message); b.disabled = false; }
+    return;
+  }
+});
+
+function shuf(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+load();
 </script>
 </body>
 </html>
-
-

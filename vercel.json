@@ -1,12 +1,4 @@
 {
-  "rewrites": [
-    { "source": "/home", "destination": "/home.html" },
-    { "source": "/calendar", "destination": "/calendar.html" },
-    { "source": "/hands-on", "destination": "/hands-on.html" },
-    { "source": "/attendance", "destination": "/attendance.html" },
-    { "source": "/tools", "destination": "/tools.html" },
-    { "source": "/candidates", "destination": "/import.html" },
-    { "source": "/activity", "destination": "/activity.html" },
-    { "source": "/account", "destination": "/accounts.html" }
-  ]
+  "cleanUrls": true,
+  "trailingSlash": false
 }
